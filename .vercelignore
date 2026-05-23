@@ -1,0 +1,10 @@
+.git
+.gitignore
+.claude
+node_modules
+scripts
+docs
+memory
+*.log
+.DS_Store
+Thumbs.db
