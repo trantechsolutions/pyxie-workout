@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { usePyxie } from './store/usePyxie';
 import { Hud } from './components/Hud';
 import { Nav } from './components/Nav';
@@ -10,6 +10,8 @@ import { Workout } from './screens/Workout';
 import { WorkoutTimer } from './screens/WorkoutTimer';
 import { Settings } from './screens/Settings';
 import { Dead } from './screens/Dead';
+
+const Wiki = lazy(() => import('./screens/Wiki'));
 import { usePersistenceLifecycle } from './hooks/usePersistenceLifecycle';
 import { useDecayLoop } from './hooks/useDecayLoop';
 import { useInstallPromptCapture } from './hooks/useInstallPromptCapture';
@@ -25,6 +27,11 @@ function ScreenRouter() {
   if (!pet.alive) return <Dead />;
   if (workoutActive) return <WorkoutTimer />;
   if (tab === 'workout') return <Workout />;
+  if (tab === 'wiki') return (
+    <Suspense fallback={<div className="wiki-loading">Loading wiki…</div>}>
+      <Wiki />
+    </Suspense>
+  );
   if (tab === 'settings') return <Settings />;
   return <Pet />;
 }

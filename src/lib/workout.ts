@@ -14,7 +14,7 @@ export function pickExercises(intensity: Intensity, complexity: Complexity, coun
 export function buildSegments(exList: Exercise[]): Segment[] {
   const segments: Segment[] = [{ kind: 'warmup', dur: 60, label: 'Warm up' }];
   exList.forEach((ex, i) => {
-    segments.push({ kind: 'work', dur: 45, label: ex.name, cue: ex.cue, idx: i + 1 });
+    segments.push({ kind: 'work', dur: 45, label: ex.name, cue: ex.cue, form: ex.form, idx: i + 1 });
     if (i < exList.length - 1) segments.push({ kind: 'rest', dur: 15, label: 'Rest', next: exList[i + 1].name });
   });
   segments.push({ kind: 'cooldown', dur: 60, label: 'Cool down' });

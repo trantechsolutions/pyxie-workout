@@ -1,5 +1,6 @@
 import { AlarmSection } from './settings/AlarmSection';
 import { SoundSection } from './settings/SoundSection';
+import { CoachingSection } from './settings/CoachingSection';
 import { HistorySection } from './settings/HistorySection';
 import { InstallSection } from './settings/InstallSection';
 import { ResetSection } from './settings/ResetSection';
@@ -11,6 +12,7 @@ export function Settings() {
       <div className="panel-sub">Configure your routine</div>
       <AlarmSection />
       <SoundSection />
+      <CoachingSection />
       <HistorySection />
       <InstallSection />
       <ResetSection />

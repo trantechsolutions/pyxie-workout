@@ -11,6 +11,7 @@ const PHASE_LABEL: Record<string, string | ((w: ActiveWorkout) => string)> = {
 
 export function WorkoutTimer() {
   const w = usePyxie((s) => s.ui.workoutActive)!;
+  const showExerciseGuide = usePyxie((s) => s.settings.showExerciseGuide);
   const tickWorkout = usePyxie((s) => s.tickWorkout);
   const togglePause = usePyxie((s) => s.togglePause);
   const skipSegment = usePyxie((s) => s.skipSegment);
@@ -44,6 +45,7 @@ export function WorkoutTimer() {
       <div className="timer-phase">{phaseLabel}</div>
       <div className="timer-exercise">{seg.label}</div>
       {seg.cue && <div className="timer-detail">{seg.cue}</div>}
+      {seg.form && showExerciseGuide && <div className="timer-form">{seg.form}</div>}
       {seg.kind === 'rest' && seg.next && <div className="timer-detail">Next: <b>{seg.next}</b></div>}
       <div className={`timer-circle ${phaseClass}`}>
         <svg width="180" height="180" viewBox="0 0 180 180">

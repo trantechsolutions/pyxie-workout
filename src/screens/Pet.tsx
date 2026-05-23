@@ -25,7 +25,7 @@ export function Pet() {
         <div className="meta-line">
           <span>Hatches in <b>{pet.workoutsToHatch} workout{pet.workoutsToHatch === 1 ? '' : 's'}</b></span>
         </div>
-        <div className="pet-actions">
+        <div className="pet-actions pet-actions--single">
           <button className="btn primary" onClick={() => setTab('workout')}>Workout</button>
         </div>
       </>

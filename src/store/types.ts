@@ -1,7 +1,7 @@
 export type Line = 'ember' | 'tide' | 'verdant' | 'gale' | 'stone' | 'umbra' | 'aurora' | 'static';
 export type Intensity = 'easy' | 'medium' | 'hard';
 export type Complexity = 'beginner' | 'intermediate' | 'advanced';
-export type Tab = 'pet' | 'workout' | 'settings';
+export type Tab = 'pet' | 'workout' | 'wiki' | 'settings';
 export type SegmentKind = 'warmup' | 'work' | 'rest' | 'cooldown';
 export type BeepKind = SegmentKind | 'tick' | 'alarm' | 'evolution';
 
@@ -39,11 +39,13 @@ export interface Settings {
   alarmHour: number;
   alarmMinute: number;
   soundOn: boolean;
+  showExerciseGuide: boolean;
 }
 
 export interface Exercise {
   name: string;
   cue: string;
+  form?: string;
 }
 
 export interface Segment {
@@ -51,6 +53,7 @@ export interface Segment {
   dur: number;
   label: string;
   cue?: string;
+  form?: string;
   idx?: number;
   next?: string;
 }

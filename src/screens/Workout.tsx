@@ -39,11 +39,18 @@ export function Workout() {
       {previewList && (
         <div>
           <div className="field-label preview-label">Today's set</div>
-          {previewList.map((e, i) => (
-            <div key={i} className="history-item">
-              <span>{i + 1}. {e.name}</span><span>45s</span>
-            </div>
-          ))}
+          {previewList.map((e, i) =>
+            e.form && settings.showExerciseGuide ? (
+              <details key={i} className="preview-item">
+                <summary><span>{i + 1}. {e.name}</span><span>45s</span></summary>
+                <div className="preview-form">{e.form}</div>
+              </details>
+            ) : (
+              <div key={i} className="history-item">
+                <span>{i + 1}. {e.name}</span><span>45s</span>
+              </div>
+            )
+          )}
         </div>
       )}
       <div className="cta-grid">

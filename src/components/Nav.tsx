@@ -1,7 +1,7 @@
 import { usePyxie } from '../store/usePyxie';
 import type { Tab } from '../store/types';
 
-const TABS: Array<[Tab, string]> = [['pet', 'Pet'], ['workout', 'Workout'], ['settings', 'Settings']];
+const TABS: Array<[Tab, string]> = [['pet', 'Pet'], ['workout', 'Workout'], ['wiki', 'Wiki'], ['settings', 'Settings']];
 
 export function Nav() {
   const pet = usePyxie((s) => s.pet);

@@ -32,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   alarmHour: 7,
   alarmMinute: 0,
   soundOn: true,
+  showExerciseGuide: true,
 };
 
 export const DEFAULT_SESSION_UI: SessionUI = {
