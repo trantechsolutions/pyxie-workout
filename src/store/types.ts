@@ -1,7 +1,7 @@
 export type Line = 'ember' | 'tide' | 'verdant' | 'gale' | 'stone' | 'umbra' | 'aurora' | 'static';
 export type Intensity = 'easy' | 'medium' | 'hard';
 export type Complexity = 'beginner' | 'intermediate' | 'advanced';
-export type Tab = 'pet' | 'workout' | 'wiki' | 'settings';
+export type Tab = 'pet' | 'workout' | 'settings';
 export type SegmentKind = 'warmup' | 'work' | 'rest' | 'cooldown';
 export type BeepKind = SegmentKind | 'tick' | 'alarm' | 'evolution';
 

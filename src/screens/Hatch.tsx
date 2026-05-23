@@ -13,8 +13,8 @@ export function Hatch() {
     <>
       <div className="panel-title">A mysterious egg appears</div>
       <div className="panel-sub">You won't know what's inside until it hatches</div>
-      <div className="starter-grid" style={{ justifyContent: 'center' }}>
-        <div className="starter-card selected">
+      <div className="starter-grid">
+        <div className="starter-card selected" style={{ gridColumn: 2 }}>
           <EggSprite size={120} />
           <div className="starter-name">???</div>
           <div className="starter-type">Hatches in {HATCH_WORKOUTS} workouts</div>

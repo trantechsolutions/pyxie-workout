@@ -5,12 +5,15 @@ import { Sprite } from '../components/Sprite';
 import { EggSprite } from '../components/EggSprite';
 import { petMood } from '../lib/decay';
 import { streakMultiplier } from '../lib/progression';
+import { Hatch } from './Hatch';
 
 export function Pet() {
-  const pet = usePyxie((s) => s.pet)!;
+  const pet = usePyxie((s) => s.pet);
   const tapPet = usePyxie((s) => s.tapPet);
   const play = usePyxie((s) => s.play);
   const setTab = usePyxie((s) => s.setTab);
+
+  if (!pet) return <Hatch />;
 
   if (pet.workoutsToHatch > 0) {
     return (

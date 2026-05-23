@@ -2,9 +2,23 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Dev-only: serve /wiki and /landing without the .html suffix, mirroring
+// Vercel's `cleanUrls: true` behavior in production.
+const cleanUrls = {
+  name: 'pyxie-clean-urls',
+  configureServer(server: { middlewares: { use: (fn: (req: { url?: string }, _res: unknown, next: () => void) => void) => void } }) {
+    server.middlewares.use((req, _res, next) => {
+      if (req.url === '/wiki' || req.url?.startsWith('/wiki?')) req.url = '/wiki.html' + req.url.slice(5);
+      else if (req.url === '/landing' || req.url?.startsWith('/landing?')) req.url = '/landing.html' + req.url.slice(8);
+      next();
+    });
+  }
+};
+
 export default defineConfig({
   plugins: [
     react(),
+    cleanUrls,
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon.svg', 'icons/icon-maskable.svg', 'icons/apple-touch-icon.png'],
@@ -39,6 +53,12 @@ export default defineConfig({
   ],
   build: {
     target: 'es2022',
-    sourcemap: false
+    sourcemap: false,
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        wiki: 'wiki.html'
+      }
+    }
   }
 });
