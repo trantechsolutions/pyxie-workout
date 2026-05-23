@@ -1,5 +1,5 @@
 import { usePyxie, selectXpToNext, selectIsFinalForm } from '../store/usePyxie';
-import { LINE_INFO } from '../data/creatures';
+import { LINE_INFO } from '../data/lineRegistry';
 import { EVOLUTION_TREE, legacyLineageId } from '../data/evolutionTree';
 import { Sprite } from '../components/Sprite';
 import { EggSprite } from '../components/EggSprite';

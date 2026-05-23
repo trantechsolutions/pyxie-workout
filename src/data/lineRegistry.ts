@@ -70,7 +70,11 @@ export interface EggFleck {
 export interface LineDefinition {
   label: string;
   tagline: string;
-  /** UI swatch color used in label chips / line pickers. Independent of `palette`. */
+  /**
+   * UI chip color for label badges / line pickers. Intentionally distinct from
+   * `palette[0]` because it represents the line's brand identity in chrome, not
+   * the body fill rendered into the sprite.
+   */
   swatch: string;
   /** Length-6 palette. Slot 0 = primary, 1 = bright, 2 = light, 3 = dark, 4 = highlight, 5 = deep shadow. */
   palette: Palette;
@@ -79,8 +83,8 @@ export interface LineDefinition {
   eggFleck: EggFleck;
   /** Tree id prefix this line occupies. Currently always equal to the Line key. */
   lineageNamespace: string;
-  /** Whether this line can be rolled when an egg hatches. */
-  hatchable: boolean;
+  /** Whether this line can be rolled when an egg hatches. Defaults to `true`. */
+  hatchable?: boolean;
 }
 
 // -----------------------------------------------------------------------------
@@ -254,7 +258,6 @@ export const LINE_REGISTRY: Record<Line, LineDefinition> = {
     baselineGrid: EMBERLING,
     eggFleck: { char: 'O', color: '#FF6B35' },
     lineageNamespace: 'ember',
-    hatchable: true,
   },
   tide: {
     label: 'Tide',
@@ -264,7 +267,6 @@ export const LINE_REGISTRY: Record<Line, LineDefinition> = {
     baselineGrid: DROPET,
     eggFleck: { char: 'B', color: '#3DBEDC' },
     lineageNamespace: 'tide',
-    hatchable: true,
   },
   verdant: {
     label: 'Verdant',
@@ -274,7 +276,6 @@ export const LINE_REGISTRY: Record<Line, LineDefinition> = {
     baselineGrid: SPROUT,
     eggFleck: { char: 'G', color: '#8AC34A' },
     lineageNamespace: 'verdant',
-    hatchable: true,
   },
   gale: {
     label: 'Gale',
@@ -284,7 +285,6 @@ export const LINE_REGISTRY: Record<Line, LineDefinition> = {
     baselineGrid: WISPLET,
     eggFleck: { char: 'L', color: '#B8C5D6' },
     lineageNamespace: 'gale',
-    hatchable: true,
   },
   stone: {
     label: 'Stone',
@@ -294,7 +294,6 @@ export const LINE_REGISTRY: Record<Line, LineDefinition> = {
     baselineGrid: PEBBLING,
     eggFleck: { char: 'N', color: '#C9A47C' },
     lineageNamespace: 'stone',
-    hatchable: true,
   },
   umbra: {
     label: 'Umbra',
@@ -304,7 +303,6 @@ export const LINE_REGISTRY: Record<Line, LineDefinition> = {
     baselineGrid: SHADEWISP,
     eggFleck: { char: 'U', color: '#A89BC4' },
     lineageNamespace: 'umbra',
-    hatchable: true,
   },
   aurora: {
     label: 'Aurora',
@@ -314,7 +312,6 @@ export const LINE_REGISTRY: Record<Line, LineDefinition> = {
     baselineGrid: GLIMMIE,
     eggFleck: { char: 'A', color: '#FFB4D8' },
     lineageNamespace: 'aurora',
-    hatchable: true,
   },
   static: {
     label: 'Static',
@@ -324,7 +321,6 @@ export const LINE_REGISTRY: Record<Line, LineDefinition> = {
     baselineGrid: SPARKLER,
     eggFleck: { char: 'Y', color: '#FFEA66' },
     lineageNamespace: 'static',
-    hatchable: true,
   },
 };
 
@@ -337,5 +333,24 @@ export const LINE_REGISTRY: Record<Line, LineDefinition> = {
 export const ALL_LINES: readonly Line[] = Object.keys(LINE_REGISTRY) as Line[];
 
 export const HATCHABLE_BASELINES: readonly Line[] = ALL_LINES.filter(
-  (l) => LINE_REGISTRY[l].hatchable,
+  (l) => LINE_REGISTRY[l].hatchable ?? true,
 );
+
+/**
+ * Per-line palette table. Derived from `LINE_REGISTRY[line].palette`. Adding a
+ * new line no longer requires editing a parallel map.
+ */
+export const PALETTES: Record<Line, readonly string[]> = Object.fromEntries(
+  ALL_LINES.map((line) => [line, LINE_REGISTRY[line].palette]),
+) as unknown as Record<Line, readonly string[]>;
+
+/**
+ * Per-line UI display info (chip label + tagline + chip color). Derived from
+ * `LINE_REGISTRY` — `color` is the registry `swatch` field.
+ */
+export const LINE_INFO: Record<Line, { label: string; tagline: string; color: string }> = Object.fromEntries(
+  ALL_LINES.map((line) => {
+    const def = LINE_REGISTRY[line];
+    return [line, { label: def.label, tagline: def.tagline, color: def.swatch }];
+  }),
+) as Record<Line, { label: string; tagline: string; color: string }>;

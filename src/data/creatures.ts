@@ -1,13 +1,4 @@
 import type { Line } from '../store/types';
-import { LINE_REGISTRY } from './lineRegistry';
-
-// ADR-0005: PALETTES is derived from LINE_REGISTRY. Slots 1–6 of the grid char
-// alphabet map to palette[0..5]; slots 7/8 (white/black) are renderer constants
-// and no longer live in this array. The length-6 contract is enforced by the
-// `Palette` tuple type in `lineRegistry.ts`.
-export const PALETTES: Record<Line, readonly string[]> = Object.fromEntries(
-  (Object.keys(LINE_REGISTRY) as Line[]).map((line) => [line, LINE_REGISTRY[line].palette]),
-) as unknown as Record<Line, readonly string[]>;
 
 /**
  * @deprecated ADR-0005. The legacy linear catalog. Retained only as a migration
@@ -582,12 +573,3 @@ export const CREATURES: Record<Line, CreatureDef[]> = {
     ] },
   ],
 };
-
-// ADR-0005: derived from LINE_REGISTRY. Adding a new line no longer requires
-// keeping LINE_INFO in sync with PALETTES, HATCHABLE_BASELINES, etc.
-export const LINE_INFO: Record<Line, { label: string; tagline: string; color: string }> = Object.fromEntries(
-  (Object.keys(LINE_REGISTRY) as Line[]).map((line) => {
-    const def = LINE_REGISTRY[line];
-    return [line, { label: def.label, tagline: def.tagline, color: def.swatch }];
-  }),
-) as Record<Line, { label: string; tagline: string; color: string }>;

@@ -2,7 +2,7 @@ import type { Line } from '../store/types';
 import { CREATURES } from './creatures';
 import altGridsJson from './altGrids.json';
 import { withLeafFlourish as makeLeafFlourishTransform } from '../lib/spriteRenderer';
-import { LINE_REGISTRY, parseGrid, type Grid } from './lineRegistry';
+import { ALL_LINES, LINE_REGISTRY, parseGrid, type Grid } from './lineRegistry';
 
 // Branching evolution tree (ADR-0003).
 //
@@ -31,9 +31,9 @@ export interface EvolutionNode {
   stage: number;
   branchAxis: BranchAxis | null;
   children: { primary: string; alt: string } | null;
-  // 16x16 sprite grid (same convention as `CREATURES` in creatures.ts).
+  // 16x16 branded sprite grid (validated by `parseGrid` at tree-build time).
   // `null` means art is pending — Sprite falls back to a procedural placeholder.
-  grid: string[] | null;
+  grid: Grid | null;
 }
 
 // Final-stage index. Stages run 0..MAX_STAGE; nodes at MAX_STAGE are terminal.
@@ -524,16 +524,14 @@ function withLeafFlourish(parent: string[], suffix: 'p' | 'a', line: Line): stri
 }
 
 const STAGE3_PATHS = ['ppp', 'ppa', 'pap', 'paa', 'app', 'apa', 'aap', 'aaa'] as const;
-const LEAF_LINES: readonly Line[] = ['ember', 'tide', 'verdant', 'gale', 'stone', 'umbra', 'aurora', 'static'];
+const LEAF_LINES: readonly Line[] = ALL_LINES;
 
-// Stage-3 spine parent (`*-ppp`) lives in the legacy CREATURES catalog (index 2
-// = stage 3 — CREATURES is 0-indexed off stage 1). Fall back to it so the
-// `*-ppp` → `*-pppa` synthesis works without duplicating Pyrokit/Tidalkin/etc.
+// Stage-3 spine parents (`*-ppp`) are seeded into NEW_GRIDS at module load
+// from the CREATURES catalog (see the spine-seeding loop above), so this
+// lookup is now a pure NEW_GRIDS query — CREATURES is no longer touched at
+// runtime fallback time.
 function stage3ParentGrid(line: Line, path: string): string[] | undefined {
-  const direct = NEW_GRIDS[`${line}-${path}`];
-  if (direct) return direct;
-  if (path === 'ppp') return CREATURES[line]?.[2]?.grid; // stage 3 = index 2
-  return undefined;
+  return NEW_GRIDS[`${line}-${path}`];
 }
 
 for (const line of LEAF_LINES) {
@@ -550,7 +548,7 @@ for (const line of LEAF_LINES) {
 // Tree construction.
 // =============================================================================
 
-const LINES: Line[] = ['ember', 'tide', 'verdant', 'gale', 'stone', 'umbra', 'aurora', 'static'];
+const LINES: readonly Line[] = ALL_LINES;
 const PATH_CHARS: ('p' | 'a')[] = ['p', 'a'];
 
 // Capitalize the first letter for templated names.
@@ -577,7 +575,7 @@ function buildNode(line: Line, path: string): EvolutionNode {
     stage,
     branchAxis: isFinal ? null : BRANCH_AXIS_BY_STAGE[stage],
     children: isFinal ? null : { primary: childPrimary, alt: childAlt },
-    grid: NEW_GRIDS[id] ?? null,
+    grid: NEW_GRIDS[id] ? parseGrid(NEW_GRIDS[id], id) : null,
   };
 }
 
@@ -688,22 +686,25 @@ export function resolveGrid(line: Line, stage: number, lineageId?: string): Reso
   // legacy three-tier semantics from the pre-ADR-0005 Sprite.tsx.
   const placeholderRequest = !!lineageId && lineageId !== legacyId;
 
+  // Grids in EVOLUTION_TREE are already branded `Grid` (validated at tree-build
+  // time) so resolveGrid no longer needs to re-validate on hot read paths.
+
   // 1. Authored target node.
   if (lineageId) {
     const target = EVOLUTION_TREE[lineageId];
-    if (target?.grid) return { grid: parseGrid(target.grid, lineageId), placeholder: false };
+    if (target?.grid) return { grid: target.grid, placeholder: false };
   }
 
   // 2. Legacy/spine fallback — same line+stage on the all-primary spine.
   const spine = EVOLUTION_TREE[legacyId];
   if (spine?.grid) {
-    return { grid: parseGrid(spine.grid, legacyId), placeholder: placeholderRequest };
+    return { grid: spine.grid, placeholder: placeholderRequest };
   }
 
   // 3. Procedural ancestor walk for art-pending ids.
   const ancestor = lineageId ? ancestorWalk(lineageId) : null;
   if (ancestor?.grid) {
-    return { grid: parseGrid(ancestor.grid, ancestor.id), placeholder: true };
+    return { grid: ancestor.grid, placeholder: true };
   }
 
   // 4. Registry baseline — always authored.

@@ -7,33 +7,12 @@
 // only requires choosing a free fleck char and slotting it into this grid.
 import type { Line } from '../store/types';
 import { LINE_REGISTRY } from '../data/lineRegistry';
-
-const SHELL_CHAR = 'C';
-const SHADOW_CHAR = 'S';
-
-const EGG_GRID: string[] = [
-  '................',
-  '................',
-  '.......CC.......',
-  '......CCCC......',
-  '.....CCCCAS.....',
-  '....CCOCCCCS....',
-  '....UCCCCCCS....',
-  '....CCCCBCCS....',
-  '....CCCCCCCS....',
-  '....CGCCCCYS....',
-  '....CCCCCLCS....',
-  '....CCCCCCCS....',
-  '.....CCNCCS.....',
-  '......CCCS......',
-  '................',
-  '................',
-];
+import { EGG_GRID, EGG_SHELL_CHAR, EGG_SHADOW_CHAR } from '../data/eggGrid';
 
 const COLORS: Record<string, string> = (() => {
   const out: Record<string, string> = {
-    [SHELL_CHAR]: '#F5F1E8',
-    [SHADOW_CHAR]: '#C9C3D0',
+    [EGG_SHELL_CHAR]: '#F5F1E8',
+    [EGG_SHADOW_CHAR]: '#C9C3D0',
   };
   for (const line of Object.keys(LINE_REGISTRY) as Line[]) {
     const { char, color } = LINE_REGISTRY[line].eggFleck;

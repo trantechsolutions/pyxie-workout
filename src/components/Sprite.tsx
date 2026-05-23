@@ -56,10 +56,17 @@ export function Sprite({ line, stage, size = 200, onClick, lineageId, seed }: Pr
       >?</text>
     </g>
   ) : null;
-  const svgStyle: React.CSSProperties = {
-    ...(onClick ? { cursor: 'pointer' as const } : {}),
-    ...(hueDeg !== 0 ? { filter: `hue-rotate(${hueDeg}deg)` } : {}),
-  };
+  const svgStyle: React.CSSProperties | undefined = onClick
+    ? { cursor: 'pointer' as const }
+    : undefined;
+  // Hue rotation applies only to the rendered body so the placeholder "?"
+  // badge text keeps its authored color.
+  const bodyGroup =
+    hueDeg !== 0 ? (
+      <g style={{ filter: `hue-rotate(${hueDeg}deg)` }}>{rects}</g>
+    ) : (
+      <g>{rects}</g>
+    );
   return (
     <svg
       className={`pet-sprite${placeholder ? ' pet-sprite-placeholder' : ''}`}
@@ -69,9 +76,9 @@ export function Sprite({ line, stage, size = 200, onClick, lineageId, seed }: Pr
       xmlns="http://www.w3.org/2000/svg"
       shapeRendering="crispEdges"
       onClick={onClick}
-      style={Object.keys(svgStyle).length ? svgStyle : undefined}
+      style={svgStyle}
     >
-      {rects}
+      {bodyGroup}
       {badge}
     </svg>
   );
