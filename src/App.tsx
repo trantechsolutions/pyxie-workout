@@ -1,0 +1,55 @@
+import { useEffect } from 'react';
+import { usePyxie } from './store/usePyxie';
+import { Hud } from './components/Hud';
+import { Nav } from './components/Nav';
+import { EvolutionFlash } from './components/EvolutionFlash';
+import { InstallModal } from './components/InstallModal';
+import { Hatch } from './screens/Hatch';
+import { Pet } from './screens/Pet';
+import { Workout } from './screens/Workout';
+import { WorkoutTimer } from './screens/WorkoutTimer';
+import { Settings } from './screens/Settings';
+import { Dead } from './screens/Dead';
+import { usePersistenceLifecycle } from './hooks/usePersistenceLifecycle';
+import { useDecayLoop } from './hooks/useDecayLoop';
+import { useInstallPromptCapture } from './hooks/useInstallPromptCapture';
+import { useIosInstallNudge } from './hooks/useIosInstallNudge';
+import { useDailyAlarm } from './hooks/useDailyAlarm';
+
+function ScreenRouter() {
+  const pet = usePyxie((s) => s.pet);
+  const tab = usePyxie((s) => s.ui.tab);
+  const workoutActive = usePyxie((s) => s.ui.workoutActive);
+
+  if (!pet) return <Hatch />;
+  if (!pet.alive) return <Dead />;
+  if (workoutActive) return <WorkoutTimer />;
+  if (tab === 'workout') return <Workout />;
+  if (tab === 'settings') return <Settings />;
+  return <Pet />;
+}
+
+export function App() {
+  const hydrate = usePyxie((s) => s.hydrate);
+  useEffect(() => { hydrate(); }, [hydrate]);
+
+  usePersistenceLifecycle();
+  useDecayLoop();
+  useInstallPromptCapture();
+  useDailyAlarm();
+  const iosNudge = useIosInstallNudge();
+
+  return (
+    <>
+      <div className="app">
+        <div className="title">PYXIE</div>
+        <div className="subtitle">Pixel Pet · Calisthenics</div>
+        <Hud />
+        <div className="screen"><div className="screen-inner"><ScreenRouter /></div></div>
+      </div>
+      <Nav />
+      <EvolutionFlash />
+      {iosNudge.show && <InstallModal onDismiss={iosNudge.dismiss} />}
+    </>
+  );
+}

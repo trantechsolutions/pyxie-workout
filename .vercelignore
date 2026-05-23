@@ -5,6 +5,7 @@ node_modules
 scripts
 docs
 memory
+tests
 *.log
 .DS_Store
 Thumbs.db

@@ -5,16 +5,21 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const HTML = fs.readFileSync(path.join(__dirname, '..', 'pyxie.html'), 'utf8');
+const SRC = fs.readFileSync(path.join(__dirname, '..', 'src', 'data', 'creatures.ts'), 'utf8');
 const OUT = path.join(__dirname, '..', 'docs', 'wiki', 'sprites');
 fs.mkdirSync(OUT, { recursive: true });
 
-// Extract PALETTES and CREATURES literal blocks via regex.
-const paletteSrc = HTML.match(/const PALETTES = \{[\s\S]*?\};/)[0];
-const creatureSrc = HTML.match(/const CREATURES = \{[\s\S]*?^\};/m)[0];
+// Strip ES module + TS syntax and eval in a vm sandbox.
+const code = SRC
+  .replace(/^import[^;]+;/gm, '')
+  .replace(/^export\s+(const|interface)\s+/gm, '$1 ')
+  .replace(/:\s*Record<[^>]+>/g, '')
+  .replace(/:\s*readonly\s+string\[\]/g, '')
+  .replace(/^interface\s+\w+\s*\{[^}]+\}/gm, '')
+  + '\nmodule.exports = { PALETTES, CREATURES };';
 const ctx = { module: { exports: {} } };
 vm.createContext(ctx);
-vm.runInContext(`${paletteSrc}\n${creatureSrc}\nmodule.exports = { PALETTES, CREATURES };`, ctx);
+vm.runInContext(code, ctx);
 const { PALETTES, CREATURES } = ctx.module.exports;
 
 function render(line, stageIdx, size = 160) {

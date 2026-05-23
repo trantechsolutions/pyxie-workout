@@ -13,7 +13,7 @@ graph LR
   A[Pick a starter] --> B[Complete a workout]
   B --> C[Pet gains XP +<br/>stats refill]
   C --> D{Cross XP<br/>threshold?}
-  D -->|Yes| E[Evolve!]
+  D -->|Yes| E[Evolve!<br/>branch chosen by<br/>your habits]
   D -->|No| F[Keep going]
   E --> F
   F -->|Next day| B
@@ -25,85 +25,300 @@ graph LR
 
 You **feed your pet by working out**. Skip too many days and it gets hungry, sad, and tired. Skip even more, and it dies. There is no second pet without releasing the first.
 
+Every evolution is a **fork in the road**. Which of two children you get depends on the workouts you've actually done — not a setting, not a roll of the dice. Stick to easy walks and you'll meet one creature; chase burpees and you'll meet a different one. See the [branching rules](#how-evolution-branches) below.
+
 ---
 
-## Three starter lines
+## Five starter lines
 
-When you hatch, you pick one of three elemental lines. Each evolves through five stages. The line you pick is permanent for that pet's life.
+When your egg hatches, the game rolls one of five elemental lines for you — blind-box, independent of egg color. Each evolves through five stages. The line your pet receives is permanent for that pet's life.
 
 | Line | Theme | Vibe |
 |---|---|---|
 | 🔥 **Ember** | Forged in fire | Aggressive, fierce, glow-in-the-dark warmth |
 | 💧 **Tide** | Born of the deep | Calm, flowing, the patient one |
 | 🌿 **Verdant** | Rooted in earth | Steady, ancient, wild |
+| 🌬️ **Gale** | Carried on the wind | Mobile, quick, sky-bound (ADR-0004) |
+| 🪨 **Stone** | Patient and unbroken | Heavy, mineral, isometric (ADR-0004) |
 
-There is no "best" line — only the one that looks coolest evolving in your hand. All three follow the same XP curve.
+There is no "best" line — only the one that looks coolest evolving in your hand. All five follow the same XP curve.
 
 ---
 
-## 🔥 Ember evolution
+## How evolution branches
+
+Every time your pet hits an XP threshold, the game checks your **workout history** and picks one of two children for the next stage. The axis flips at each step:
+
+```mermaid
+graph TD
+  S0[Stage 0 · Baseline] -->|easy+medium dominant| S1P[Stage 1 · Primary]
+  S0 -->|hard dominant| S1A[Stage 1 · Alt]
+  S1P -->|beginner dominant| S2PP[Stage 2 · PP]
+  S1P -->|intermediate+advanced dominant| S2PA[Stage 2 · PA]
+  S1A -->|beginner dominant| S2AP[Stage 2 · AP]
+  S1A -->|intermediate+advanced dominant| S2AA[Stage 2 · AA]
+  S2PP -->|intensity again| S3[Stage 3 · 8 forms]
+  S2PA -->|intensity again| S3
+  S2AP -->|intensity again| S3
+  S2AA -->|intensity again| S3
+  S3 -->|complexity again| S4[Stage 4 · 16 finals]
+```
+
+| Stage transition | Axis | Primary side | Alt side |
+|---|---|---|---|
+| 0 → 1 | **Intensity** | easy + medium | hard |
+| 1 → 2 | **Complexity** | beginner | intermediate + advanced |
+| 2 → 3 | **Intensity** | easy + medium | hard |
+| 3 → 4 | **Complexity** | beginner | intermediate + advanced |
+
+Ties favour the primary side, so a pet trained on pure defaults walks down the canonical spine. Mix it up to see the rarer forms.
+
+> **A path is its name.** Forms are labelled by the choices it took to get there. `ember-pap` = Ember → primary → alt → primary. The path is permanent for that pet; release it from the settings tab if you want a different lineage.
+
+---
+
+## 🔥 Ember evolution tree
 
 > *Forged in fire.*
 
+Sixteen named forms across five stages. The spine (all-primary) leads to **Drakorath**. Cranking workouts harder or more complex peels off into the alt branches.
+
 ```mermaid
 graph LR
-  E1[Emberling<br/>0 XP] --> E2[Cinderpup<br/>60 XP]
-  E2 --> E3[Pyrokit<br/>180 XP]
-  E3 --> E4[Infernox<br/>420 XP]
-  E4 --> E5[Drakorath<br/>900 XP]
+  E0[Emberling] -->|p| E1P[Cinderpup]
+  E0 -->|a| E1A[Sparkit]
+  E1P -->|p| E2PP[Pyrokit]
+  E1P -->|a| E2PA[Blazewig]
+  E1A -->|p| E2AP[Volcanid]
+  E1A -->|a| E2AA[Smolderling]
+  E2PP --> E3PPP[Infernox]
+  E2PP --> E3PPA[Vulkaron]
+  E2PA --> E3PAP[Cindarro]
+  E2PA --> E3PAA[Soothspark]
+  E2AP --> E3APP[Magmir]
+  E2AP --> E3APA[Pyrebrand]
+  E2AA --> E3AAP[Coalfin]
+  E2AA --> E3AAA[Charwyrm]
+  E3PPP --> E4[Drakorath<br/>+ 15 hidden finals]
 ```
 
-| Stage | Name | Form | XP to reach |
-|---|---|---|---|
-| 1 | **Emberling** | <img src="sprites/ember-1.svg" width="96"> | 0 (starter) |
-| 2 | **Cinderpup** | <img src="sprites/ember-2.svg" width="96"> | 60 |
-| 3 | **Pyrokit** | <img src="sprites/ember-3.svg" width="96"> | 180 |
-| 4 | **Infernox** | <img src="sprites/ember-4.svg" width="96"> | 420 |
-| 5 | **Drakorath** | <img src="sprites/ember-5.svg" width="96"> | 900 |
+### Stage 0 — baseline
+| Form | Path | Sprite |
+|---|---|---|
+| **Emberling** | `ember` | <img src="sprites/ember.svg" width="80"> |
+
+### Stage 1 — split on intensity (60 XP)
+| Form | Path | Sprite |
+|---|---|---|
+| **Cinderpup** | `ember-p` (easy+medium) | <img src="sprites/ember-p.svg" width="80"> |
+| **Sparkit** | `ember-a` (hard) | <img src="sprites/ember-a.svg" width="80"> |
+
+### Stage 2 — split on complexity (180 XP)
+| Form | Path | Sprite |
+|---|---|---|
+| **Pyrokit** | `ember-pp` | <img src="sprites/ember-pp.svg" width="80"> |
+| **Blazewig** | `ember-pa` | <img src="sprites/ember-pa.svg" width="80"> |
+| **Volcanid** | `ember-ap` | <img src="sprites/ember-ap.svg" width="80"> |
+| **Smolderling** | `ember-aa` | <img src="sprites/ember-aa.svg" width="80"> |
+
+### Stage 3 — split on intensity (420 XP)
+| Form | Path | Sprite |
+|---|---|---|
+| **Infernox** | `ember-ppp` | <img src="sprites/ember-ppp.svg" width="80"> |
+| **Vulkaron** | `ember-ppa` | <img src="sprites/ember-ppa.svg" width="80"> |
+| **Cindarro** | `ember-pap` | <img src="sprites/ember-pap.svg" width="80"> |
+| **Soothspark** | `ember-paa` | <img src="sprites/ember-paa.svg" width="80"> |
+| **Magmir** | `ember-app` | <img src="sprites/ember-app.svg" width="80"> |
+| **Pyrebrand** | `ember-apa` | <img src="sprites/ember-apa.svg" width="80"> |
+| **Coalfin** | `ember-aap` | <img src="sprites/ember-aap.svg" width="80"> |
+| **Charwyrm** | `ember-aaa` | <img src="sprites/ember-aaa.svg" width="80"> |
+
+### Stage 4 — split on complexity (900 XP)
+| Form | Path | Sprite |
+|---|---|---|
+| **Drakorath** | `ember-pppp` | <img src="sprites/ember-pppp.svg" width="80"> |
+
+> Fifteen further stage-4 finals (`ember-pppa`, `ember-ppap`, … `ember-aaaa`) exist in the tree but are unnamed and render as procedural placeholders. They unlock for players who diverge from the all-primary spine at the final fork.
 
 ---
 
-## 💧 Tide evolution
+## 💧 Tide evolution tree
 
 > *Born of the deep.*
 
+The water line. Calm starters branch into either patient currents or stormy abyssal forms. Spine ends at **Leviathos**.
+
 ```mermaid
 graph LR
-  T1[Dropet<br/>0 XP] --> T2[Bubblin<br/>60 XP]
-  T2 --> T3[Tidalkin<br/>180 XP]
-  T3 --> T4[Mareclaw<br/>420 XP]
-  T4 --> T5[Leviathos<br/>900 XP]
+  T0[Dropet] -->|p| T1P[Bubblin]
+  T0 -->|a| T1A[Coralune]
+  T1P -->|p| T2PP[Tidalkin]
+  T1P -->|a| T2PA[Brinewhip]
+  T1A -->|p| T2AP[Reefling]
+  T1A -->|a| T2AA[Saltspire]
+  T2PP --> T3PPP[Mareclaw]
+  T2PP --> T3PPA[Abyssal]
+  T2PA --> T3PAP[Streamblade]
+  T2PA --> T3PAA[Mistral]
+  T2AP --> T3APP[Currentide]
+  T2AP --> T3APA[Pelagith]
+  T2AA --> T3AAP[Surfsong]
+  T2AA --> T3AAA[Maelstrix]
+  T3PPP --> T4[Leviathos<br/>+ 15 hidden finals]
 ```
 
-| Stage | Name | Form | XP to reach |
-|---|---|---|---|
-| 1 | **Dropet** | <img src="sprites/tide-1.svg" width="96"> | 0 (starter) |
-| 2 | **Bubblin** | <img src="sprites/tide-2.svg" width="96"> | 60 |
-| 3 | **Tidalkin** | <img src="sprites/tide-3.svg" width="96"> | 180 |
-| 4 | **Mareclaw** | <img src="sprites/tide-4.svg" width="96"> | 420 |
-| 5 | **Leviathos** | <img src="sprites/tide-5.svg" width="96"> | 900 |
+### Stage 0 — baseline
+| Form | Path | Sprite |
+|---|---|---|
+| **Dropet** | `tide` | <img src="sprites/tide.svg" width="80"> |
+
+### Stage 1 — split on intensity
+| Form | Path | Sprite |
+|---|---|---|
+| **Bubblin** | `tide-p` | <img src="sprites/tide-p.svg" width="80"> |
+| **Coralune** | `tide-a` | <img src="sprites/tide-a.svg" width="80"> |
+
+### Stage 2 — split on complexity
+| Form | Path | Sprite |
+|---|---|---|
+| **Tidalkin** | `tide-pp` | <img src="sprites/tide-pp.svg" width="80"> |
+| **Brinewhip** | `tide-pa` | <img src="sprites/tide-pa.svg" width="80"> |
+| **Reefling** | `tide-ap` | <img src="sprites/tide-ap.svg" width="80"> |
+| **Saltspire** | `tide-aa` | <img src="sprites/tide-aa.svg" width="80"> |
+
+### Stage 3 — split on intensity
+| Form | Path | Sprite |
+|---|---|---|
+| **Mareclaw** | `tide-ppp` | <img src="sprites/tide-ppp.svg" width="80"> |
+| **Abyssal** | `tide-ppa` | <img src="sprites/tide-ppa.svg" width="80"> |
+| **Streamblade** | `tide-pap` | <img src="sprites/tide-pap.svg" width="80"> |
+| **Mistral** | `tide-paa` | <img src="sprites/tide-paa.svg" width="80"> |
+| **Currentide** | `tide-app` | <img src="sprites/tide-app.svg" width="80"> |
+| **Pelagith** | `tide-apa` | <img src="sprites/tide-apa.svg" width="80"> |
+| **Surfsong** | `tide-aap` | <img src="sprites/tide-aap.svg" width="80"> |
+| **Maelstrix** | `tide-aaa` | <img src="sprites/tide-aaa.svg" width="80"> |
+
+### Stage 4 — split on complexity
+| Form | Path | Sprite |
+|---|---|---|
+| **Leviathos** | `tide-pppp` | <img src="sprites/tide-pppp.svg" width="80"> |
 
 ---
 
-## 🌿 Verdant evolution
+## 🌿 Verdant evolution tree
 
 > *Rooted in earth.*
 
+The plant line. Patient growers settle into mossy steadiness; aggressive trainers grow thorns. Spine ends at **Sylvadrake**.
+
 ```mermaid
 graph LR
-  V1[Sprout<br/>0 XP] --> V2[Mosswick<br/>60 XP]
-  V2 --> V3[Vinepaw<br/>180 XP]
-  V3 --> V4[Thornroot<br/>420 XP]
-  V4 --> V5[Sylvadrake<br/>900 XP]
+  V0[Sprout] -->|p| V1P[Mosswick]
+  V0 -->|a| V1A[Mycel]
+  V1P -->|p| V2PP[Vinepaw]
+  V1P -->|a| V2PA[Briarcub]
+  V1A -->|p| V2AP[Spireleaf]
+  V1A -->|a| V2AA[Sporebound]
+  V2PP --> V3PPP[Thornroot]
+  V2PP --> V3PPA[Bramblefen]
+  V2PA --> V3PAP[Petalblade]
+  V2PA --> V3PAA[Bloomhart]
+  V2AP --> V3APP[Loamspike]
+  V2AP --> V3APA[Sapwing]
+  V2AA --> V3AAP[Mossfang]
+  V2AA --> V3AAA[Cordycept]
+  V3PPP --> V4[Sylvadrake<br/>+ 15 hidden finals]
 ```
 
-| Stage | Name | Form | XP to reach |
+### Stage 0 — baseline
+| Form | Path | Sprite |
+|---|---|---|
+| **Sprout** | `verdant` | <img src="sprites/verdant.svg" width="80"> |
+
+### Stage 1 — split on intensity
+| Form | Path | Sprite |
+|---|---|---|
+| **Mosswick** | `verdant-p` | <img src="sprites/verdant-p.svg" width="80"> |
+| **Mycel** | `verdant-a` | <img src="sprites/verdant-a.svg" width="80"> |
+
+### Stage 2 — split on complexity
+| Form | Path | Sprite |
+|---|---|---|
+| **Vinepaw** | `verdant-pp` | <img src="sprites/verdant-pp.svg" width="80"> |
+| **Briarcub** | `verdant-pa` | <img src="sprites/verdant-pa.svg" width="80"> |
+| **Spireleaf** | `verdant-ap` | <img src="sprites/verdant-ap.svg" width="80"> |
+| **Sporebound** | `verdant-aa` | <img src="sprites/verdant-aa.svg" width="80"> |
+
+### Stage 3 — split on intensity
+| Form | Path | Sprite |
+|---|---|---|
+| **Thornroot** | `verdant-ppp` | <img src="sprites/verdant-ppp.svg" width="80"> |
+| **Bramblefen** | `verdant-ppa` | <img src="sprites/verdant-ppa.svg" width="80"> |
+| **Petalblade** | `verdant-pap` | <img src="sprites/verdant-pap.svg" width="80"> |
+| **Bloomhart** | `verdant-paa` | <img src="sprites/verdant-paa.svg" width="80"> |
+| **Loamspike** | `verdant-app` | <img src="sprites/verdant-app.svg" width="80"> |
+| **Sapwing** | `verdant-apa` | <img src="sprites/verdant-apa.svg" width="80"> |
+| **Mossfang** | `verdant-aap` | <img src="sprites/verdant-aap.svg" width="80"> |
+| **Cordycept** | `verdant-aaa` | <img src="sprites/verdant-aaa.svg" width="80"> |
+
+### Stage 4 — split on complexity
+| Form | Path | Sprite |
+|---|---|---|
+| **Sylvadrake** | `verdant-pppp` | <img src="sprites/verdant-pppp.svg" width="80"> |
+
+---
+
+## 🌬️ Gale evolution tree
+
+> *Carried on the wind.*
+
+Phase-3 baseline (ADR-0004). The wind line trades grounded power for mobility — fluid silhouettes, storm-grey palette. Spine ends at **Tempestar**.
+
+```mermaid
+graph LR
+  G0[Wisplet] -->|p| G1P[Zephyrling]
+  G0 -->|a| G1A[Gustcub]
+  G1P --> G2[…stages 2-3…]
+  G1A --> G2
+  G2 --> G4[Tempestar<br/>+ 15 hidden finals]
+```
+
+| Stage | Spine form | Alt-1 form | Sprite (spine) |
 |---|---|---|---|
-| 1 | **Sprout** | <img src="sprites/verdant-1.svg" width="96"> | 0 (starter) |
-| 2 | **Mosswick** | <img src="sprites/verdant-2.svg" width="96"> | 60 |
-| 3 | **Vinepaw** | <img src="sprites/verdant-3.svg" width="96"> | 180 |
-| 4 | **Thornroot** | <img src="sprites/verdant-4.svg" width="96"> | 420 |
-| 5 | **Sylvadrake** | <img src="sprites/verdant-5.svg" width="96"> | 900 |
+| 0 | **Wisplet** (`gale`) | — | <img src="sprites/gale.svg" width="80"> |
+| 1 | **Zephyrling** (`gale-p`) | **Gustcub** (`gale-a`) | <img src="sprites/gale-p.svg" width="80"> |
+| 2 | **Galekit** (`gale-pp`) | Skydancer, Squallhound, Boltwing | <img src="sprites/gale-pp.svg" width="80"> |
+| 3 | **Cyclonix** (`gale-ppp`) | 7 alt forms (Stormvane … Stormwyrm) | <img src="sprites/gale-ppp.svg" width="80"> |
+| 4 | **Tempestar** (`gale-pppp`) | 15 unauthored leaves (incl. Skyrax chaos-leaf) | <img src="sprites/gale-pppp.svg" width="80"> |
+
+> Spine grids ship now; the 21 alt-branch grids per stage backfill in follow-up commissions per ADR-0004 rollout cadence. Unauthored nodes render via procedural placeholder with a `?` badge.
+
+---
+
+## 🪨 Stone evolution tree
+
+> *Patient and unbroken.*
+
+Phase-3 baseline (ADR-0004). The earth line rewards isometric, low-and-slow work — heavy silhouettes, warm-earth palette. Spine ends at **Megalith**.
+
+```mermaid
+graph LR
+  S0[Pebbling] -->|p| S1P[Cobbleton]
+  S0 -->|a| S1A[Shaleling]
+  S1P --> S2[…stages 2-3…]
+  S1A --> S2
+  S2 --> S4[Megalith<br/>+ 15 hidden finals]
+```
+
+| Stage | Spine form | Alt-1 form | Sprite (spine) |
+|---|---|---|---|
+| 0 | **Pebbling** (`stone`) | — | <img src="sprites/stone.svg" width="80"> |
+| 1 | **Cobbleton** (`stone-p`) | **Shaleling** (`stone-a`) | <img src="sprites/stone-p.svg" width="80"> |
+| 2 | **Granicub** (`stone-pp`) | Cobblerend, Granibrand, Shaledrake | <img src="sprites/stone-pp.svg" width="80"> |
+| 3 | **Boulderth** (`stone-ppp`) | 7 alt forms (Bouldervane … Obsiwyrm) | <img src="sprites/stone-ppp.svg" width="80"> |
+| 4 | **Megalith** (`stone-pppp`) | 15 unauthored leaves (incl. Stonerax chaos-leaf) | <img src="sprites/stone-pppp.svg" width="80"> |
+
+> Same rollout pattern as Gale — spine first, alt-branch art on follow-up PRs.
 
 ---
 
@@ -352,6 +567,7 @@ Every exercise lives in one of nine buckets — three intensities × three compl
 - **Pick a difficulty you'll actually do.** A daily Easy/Beginner workout beats a once-a-week Hard/Advanced one. Drakorath comes faster from consistency.
 - **The settings tab has a "Start over" button.** It releases your current pet and lets you hatch a new one in a different line. There's no undo.
 - **Browser alarms only fire while the tab is open.** Set a phone alarm too if you want a real morning nudge.
+- **Mix workouts to see new creatures.** Sticking to defaults always lands on the spine (Drakorath / Leviathos / Sylvadrake). The 15 alt-branch forms per line only appear if you push intensity or complexity at the right stages. Plan your route from the [evolution tree](#how-evolution-branches) above.
 
 ---
 
@@ -359,6 +575,7 @@ Every exercise lives in one of nine buckets — three intensities × three compl
 
 - Every sprite is drawn from a 16×16 character grid hand-coded into the app — no image files.
 - The three colour palettes (Ember, Tide, Verdant) total 24 colours. None of them repeat across lines.
+- The full evolution tree contains **93 nodes** (31 per line). Only 48 are hand-named; the remaining 45 stage-4 finals exist as procedural placeholders waiting for art.
 - The starfield background twinkles on a 6-second loop, with stars in white, gold, cyan, and magenta.
 - All exercise cues were written to fit on a single line of a phone screen.
 - The retro CRT scanlines are a `repeating-linear-gradient` — pure CSS, no images.
