@@ -62,11 +62,11 @@ Three steps. Headline + one sentence each. No more.
 
 > ## How Pyxie works
 >
-> **1. Pick a starter.**
-> Ember, Tide, or Verdant. Permanent for that pet's life — choose like you mean it.
+> **1. Hatch your egg.**
+> The game rolls one of eight elemental lines for you — Ember, Tide, Verdant, Gale, Stone, Umbra, Aurora, or Static. You don't pick. Whatever hatches is yours for that pet's life.
 >
 > **2. Train.**
-> Log a workout, your pet eats. Easy walk or hard session — both count, but they grow different creatures.
+> Log a workout, your pet eats. Easy walk or hard session — both count, but they grow different creatures. Your reps decide the evolution path, even though your line was decided for you.
 >
 > **3. Don't stop.**
 > Miss a day, stats decay. Miss two, your pet starves. Miss enough, it's gone, and you start over with a new egg.
@@ -93,11 +93,11 @@ The strongest reason to scroll past the hero. Give it room.
 
 Visual section. Copy is light — the tree art does most of the work. Sketch supplied separately by `repo-artist`.
 
-> ## Sixteen finals per starter. Your habits pick which.
+> ## Sixteen finals per line. Your habits pick which.
 >
 > Every time your pet hits an XP threshold, Pyxie looks at the workouts you've actually done and forks the path. Easy walks grow one creature. Burpee sprees grow a different one. You don't choose — your training does.
 >
-> Forty-eight named forms across three starter lines. Most players will only ever meet a handful.
+> **248 named forms across eight elemental lines.** You only get one line per egg, rolled at hatch. Most players will only ever meet a handful of forms in a lifetime of pets.
 >
 > [ visual: Ember evolution tree, 16 forms branching across 5 stages ]
 >
@@ -135,7 +135,25 @@ Three questions. The ones that will actually come up. Keep it tight.
 
 ---
 
-## SECTION 7 — Final CTA
+## SECTION 7 — Why this exists (founder note)
+
+The personal beat. After the FAQ, before the ask. Voice leans warm + honest here — the wry dial is turned down. This is the section that earns the rest of the page.
+
+> ## Why this exists
+>
+> The hardest part of working out isn't the workout. It's getting up to do it.
+>
+> I built Pyxie for me and my kids. I needed a reason to move that wasn't a number on a scale or a streak in a habit app — something that would actually be sad if I let it down. Something small enough that my children could love it too. A reward to show for the effort, that we could watch grow alongside us.
+>
+> The evolution mechanic is a love letter to **Eevee** — the Pokémon with eight different futures depending on how you raised it. The idea that a single starting point could branch into wildly different creatures based on your choices is the design idea Pyxie is built on. Eight elemental lines instead of one, hidden alt-branches at every stage, 248 named forms across the whole roster — but the spirit is Eevee's.
+>
+> Pyxie isn't a product looking for a market. It's a thing I needed, that I'm sharing in case you need it too.
+>
+> *— Jonathan*
+
+---
+
+## SECTION 8 — Final CTA
 
 Recap, then ask.
 
@@ -158,7 +176,7 @@ For the email field and confirmation states.
 | Email placeholder | `you@somewhere.com` |
 | Submit button | `Claim a starter egg →` |
 | Submit button (loading) | `Hatching your spot…` |
-| Success state | `You're in. Pick a starter when we open the gates — we'll email you the second they're up.` |
+| Success state | `You're in. We'll email you the second the gates open — your egg's already waiting, we just don't know what's inside.` |
 | Error (invalid email) | `That email looks off — try one like name@example.com.` |
 | Error (already on list) | `You're already on the list. Same starter egg waiting either way.` |
 | Footer disclaimer | `One launch email. Maybe one reminder. No marketing churn — we'd rather you train.` |
@@ -183,7 +201,7 @@ Minimal. Brand mark + three links + a single sentence.
 - [x] Hero headlines all ≤14 words
 - [x] No "Learn more" — every CTA names a specific action
 - [x] Reader's problem named before solution (Section 3, Section 5)
-- [x] Specific numbers where possible (16 finals, 48 forms, 2 days to starve, 3,142 waiting)
+- [x] Specific numbers where possible (16 finals per line, 248 across the roster, 2 days to starve, 3,142 waiting)
 - [x] No banned phrases — checked against brand guide
 - [x] Voice consistent across sections (spot-check: every "we" line could be cut without losing meaning — good sign)
 - [x] Skimmable: section headlines alone tell the story

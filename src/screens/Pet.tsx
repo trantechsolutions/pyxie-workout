@@ -19,7 +19,7 @@ export function Pet() {
         <div className="pet-name">{pet.name}</div>
         <div className="pet-display">
           <div className="pet-platform"></div>
-          <EggSprite line={pet.line} size={200} />
+          <EggSprite size={200} />
         </div>
         <div className="pet-mood">A faint warmth pulses from within…</div>
         <div className="meta-line">

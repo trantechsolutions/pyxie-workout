@@ -70,7 +70,7 @@ We are NOT:
 
 ## 3. Color system
 
-The brand sits at two levels: a **parent palette** for the Pyxie world (used on the landing page, marketing, app shell, system UI), and **three elemental palettes** for Ember / Tide / Verdant (used inside the app where a pet is on screen).
+The brand sits at two levels: a **parent palette** for the Pyxie world (used on the landing page, marketing, app shell, system UI), and **eight elemental palettes** for Ember / Tide / Verdant / Gale / Stone / Umbra / Aurora / Static (used inside the app where a pet is on screen).
 
 ### Parent palette — the Pyxie world
 
@@ -103,6 +103,11 @@ Each line gets a 3-color palette used **only when that pet is on screen.** Never
 | 🔥 **Ember** | `#FF6B35` | `#D9381E` | `#5C1A0E` |
 | 💧 **Tide** | `#3DBEDC` | `#1A6F9E` | `#0B2E4A` |
 | 🌿 **Verdant** | `#8AC34A` | `#4A8B2F` | `#1F3D1A` |
+| 🌬️ **Gale** | `#B8C5D6` | `#6B7F99` | `#2C3847` |
+| 🪨 **Stone** | `#C9A47C` | `#8B6B47` | `#3D2B1F` |
+| 🌑 **Umbra** | `#A89BC4` | `#7C6D8F` | `#221830` |
+| 🌸 **Aurora** | `#FFB4D8` | `#C48BA8` | `#5A3A4A` |
+| ⚡ **Static** | `#FFEA66` | `#C9B53D` | `#5A4A0E` |
 
 ### Usage rules
 
@@ -165,11 +170,11 @@ Pyxie is a creature that *hatches from your effort*. The mark should hold that �
 
 ### Symbol concepts (three angles)
 
-1. **The egg.** A simple egg silhouette built on a 16×16 pixel grid, with a single highlight pixel offset to suggest life inside. Reads as "start" — what every Pyxie player picks at hatch.
+1. **The mystery egg.** A pixel egg silhouette on a 16×16 grid, speckled with eight scattered highlight pixels — one in each elemental hue (Ember orange, Tide cyan, Verdant green, Gale silver, Stone sand, Umbra violet, Aurora pink, Static yellow). The egg shows hints of every line but commits to none. Reads as "you don't know what's inside until you hatch" — which is the actual game. The speckle pattern doubles as a unique brand fingerprint no competitor can copy without theft. (At favicon size — 16×16 — the speckle drops to the three elder hues (Ember/Tide/Verdant) for legibility; full eight-fleck pattern is for logo-scale renders.)
 2. **The XP heartbeat.** A horizontal progress bar that pulses — half stat-bar, half ECG line. Reads as "the pet runs on your effort." Strong as an animated favicon / loading state, weaker as a static mark.
 3. **The vessel.** An open-topped pixel container (think Game Boy chassis cross-section) with a small spark inside. Reads as "Pyxie is the thing that holds the creature." More abstract; rewards a second look.
 
-Recommend leading with **#1 (the egg)**. It's the most immediate, survives smallest, and ties to the literal first action in the product.
+Recommend leading with **#1 (the mystery egg)**. It survives at 16×16, ties to the literal first moment in the product (blind-box hatch), and the five-color speckle is *visually unique* — most fitness/pet brand marks are flat single-symbol; ours has a built-in story.
 
 ### Wordmark
 
@@ -201,6 +206,6 @@ Recommend leading with **#1 (the egg)**. It's the most immediate, survives small
 | **Primary color** | Twilight `#4C3A78` |
 | **Default background** | Bonelight `#F5F1E8` |
 | **Typefaces** | Geist (everything) + Departure Mono (surgical accent) |
-| **Logo lead concept** | The egg — pixel-grid silhouette, single highlight pixel |
+| **Logo lead concept** | The mystery egg — pixel silhouette, eight-color speckle (one pixel per elemental line) |
 | **Forbidden territory** | Hustle-bro, wellness fluff, tech-bro, kitsch 8-bit |
 | **The seam we sit in** | Cute creature × real stakes. Both halves required. |

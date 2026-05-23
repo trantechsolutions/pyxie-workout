@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#F5F1E8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14121C" media="(prefers-color-scheme: dark)" />
+
+  <title>Pyxie — your pet eats your workouts</title>
+  <meta name="description" content="A virtual pet that lives or dies by whether you actually train today. Eight elemental lines, 248 named forms, no second chances." />
+
+  <meta property="og:title" content="Pyxie — your pet eats your workouts" />
+  <meta property="og:description" content="Skip leg day and it gets hungry. Skip a week and it dies. Eight lines, 248 forms, one egg per playthrough." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/landing-og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+  <!-- Fonts: Geist for body/headings, Departure Mono for wordmark + accents. Falls back gracefully. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=departure-mono@400&display=swap" />
+
+  <style>
+    /* ===========================================================
+       Design tokens — sourced from docs/marketing/brand-guide.md
+       =========================================================== */
+    :root {
+      /* Parent palette */
+      --twilight:      #4C3A78;
+      --ember-glow:    #F4A261;
+      --voidscreen:    #14121C;
+      --ash:           #5A5566;
+      --mist:          #D6D2DE;
+      --bonelight:     #F5F1E8;
+
+      /* Semantic */
+      --alive:         #5BA76B;
+      --hungry:        #E0A93B;
+      --starved:       #C7472E;
+
+      /* Elemental — used in the egg speckle + accents */
+      --ember:         #FF6B35;
+      --tide:          #3DBEDC;
+      --verdant:       #8AC34A;
+      --gale:          #B8C5D6;
+      --stone:         #C9A47C;
+      --umbra:         #A89BC4;
+      --aurora:        #FFB4D8;
+      --static-line:   #FFEA66;
+
+      /* Light-mode role tokens (default) */
+      --bg:            var(--bonelight);
+      --bg-raised:     #FBF7EE;
+      --text:          var(--voidscreen);
+      --text-muted:    var(--ash);
+      --border:        var(--mist);
+      --accent:        var(--twilight);
+      --accent-warm:   var(--ember-glow);
+      --shadow:        rgba(20, 18, 28, 0.08);
+      --focus-ring:    var(--twilight);
+
+      /* Type scale */
+      --font-body:     "Geist", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono:     "Departure Mono", "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+      --fs-display:    clamp(2.5rem, 5.5vw, 4rem);
+      --fs-h1:         clamp(2rem, 4vw, 2.75rem);
+      --fs-h2:         clamp(1.5rem, 3vw, 2rem);
+      --fs-body-l:     1.125rem;
+      --fs-body:       1rem;
+      --fs-small:      0.875rem;
+
+      /* Spacing */
+      --max-w:         64rem;
+      --max-w-prose:   38rem;
+      --gutter:        max(1.25rem, env(safe-area-inset-left));
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg:          var(--voidscreen);
+        --bg-raised:   #1E1A2A;
+        --text:        var(--bonelight);
+        --text-muted:  #B6AEBC;
+        --border:      #2C2638;
+        --shadow:      rgba(0, 0, 0, 0.4);
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg:          var(--voidscreen);
+      --bg-raised:   #1E1A2A;
+      --text:        var(--bonelight);
+      --text-muted:  #B6AEBC;
+      --border:      #2C2638;
+      --shadow:      rgba(0, 0, 0, 0.4);
+    }
+
+    /* ============ Base ============ */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      font-size: var(--fs-body);
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    img, svg { display: block; max-width: 100%; height: auto; }
+    a { color: inherit; }
+    button { font: inherit; cursor: pointer; }
+
+    :focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+
+    .skip-link {
+      position: absolute; left: -9999px; top: 0;
+      background: var(--accent); color: var(--bonelight);
+      padding: 0.5rem 1rem; z-index: 100;
+      text-decoration: none;
+    }
+    .skip-link:focus { left: 0.5rem; top: 0.5rem; }
+
+    /* ============ Layout primitives ============ */
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--gutter); }
+    .prose { max-width: var(--max-w-prose); }
+    .section { padding: clamp(3rem, 8vw, 6rem) 0; }
+    .section + .section { border-top: 1px solid var(--border); }
+
+    /* ============ Header ============ */
+    .site-header {
+      padding: 1.25rem 0;
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter: saturate(140%) blur(8px);
+      -webkit-backdrop-filter: saturate(140%) blur(8px);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    }
+    .site-header .container { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { display: inline-flex; align-items: center; gap: 0.625rem; text-decoration: none; }
+    .brand svg { width: 32px; height: 32px; image-rendering: pixelated; }
+    .brand-word {
+      font-family: var(--font-mono);
+      font-size: 1.25rem;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .brand-word .dot { color: var(--ember-glow); }
+    .theme-toggle {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.4rem 0.7rem;
+      border-radius: 999px; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .theme-toggle:hover { color: var(--text); border-color: var(--text-muted); }
+
+    /* ============ Hero ============ */
+    .hero { padding: clamp(3rem, 8vw, 6rem) 0 clamp(2rem, 6vw, 4rem); }
+    .hero h1 {
+      font-size: var(--fs-display);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      margin: 0 0 1.25rem;
+      max-width: 18ch;
+    }
+    .hero p {
+      font-size: var(--fs-body-l);
+      line-height: 1.5;
+      color: var(--text-muted);
+      max-width: 36rem;
+      margin: 0 0 2rem;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+    .hero-meta {
+      margin-top: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: var(--fs-small);
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* Hero artwork: the big egg, scaled */
+    .hero-grid { display: grid; grid-template-columns: 1fr; gap: 2.5rem; align-items: center; }
+    @media (min-width: 800px) {
+      .hero-grid { grid-template-columns: 1.2fr 1fr; gap: 4rem; }
+    }
+    .hero-art { display: flex; justify-content: center; }
+    .hero-art svg { width: min(320px, 80vw); height: auto; image-rendering: pixelated; }
+    .hero-art-frame {
+      padding: 2rem;
+      border-radius: 6px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      box-shadow: 0 12px 30px var(--shadow);
+    }
+
+    /* ============ Buttons ============ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.875rem 1.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: var(--fs-body);
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: none;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .btn { transition: background-color 180ms ease, color 180ms ease, transform 180ms ease, border-color 180ms ease; }
+      .btn:hover { transform: translateY(-1px); }
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bonelight);
+    }
+    .btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, var(--ember-glow) 12%); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--text); }
+
+    /* ============ How it works ============ */
+    .h2-eyebrow { font-family: var(--font-mono); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .h2 { font-size: var(--fs-h1); line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 2rem; max-width: 22ch; font-weight: 700; }
+
+    .steps { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+    @media (min-width: 760px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+    .step {
+      padding: 1.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-raised);
+    }
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .step-title { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.5rem; }
+    .step-body { color: var(--text-muted); margin: 0; }
+
+    /* ============ Permadeath hook ============ */
+    .hook { background: var(--bg-raised); }
+    .hook p { font-size: var(--fs-body-l); margin: 0 0 1rem; }
+    .hook .punch {
+      font-family: var(--font-mono);
+      color: var(--starved);
+      font-size: var(--fs-body-l);
+      letter-spacing: 0.02em;
+    }
+
+    /* ============ Roster horizon ============ */
+    .roster-counts {
+      display: grid; gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      margin: 2rem 0;
+    }
+    .count {
+      padding: 1.25rem; border: 1px solid var(--border); border-radius: 6px;
+      text-align: left; background: var(--bg-raised);
+    }
+    .count-n {
+      font-family: var(--font-mono);
+      font-size: 2.25rem;
+      color: var(--accent);
+      line-height: 1;
+      letter-spacing: -0.01em;
+    }
+    .count-label { font-size: var(--fs-small); color: var(--text-muted); margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    .line-strip {
+      display: grid; gap: 0.5rem;
+      grid-template-columns: repeat(8, 1fr);
+      margin: 2rem 0 1rem;
+      max-width: 36rem;
+    }
+    .line-chip {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .line-chip::after {
+      content: attr(data-name);
+      position: absolute; left: 0; right: 0; bottom: 0;
+      font-family: var(--font-mono); font-size: 0.625rem;
+      color: var(--voidscreen);
+      background: rgba(245, 241, 232, 0.85);
+      text-align: center;
+      padding: 2px 0;
+      letter-spacing: 0.04em;
+    }
+
+    /* ============ Won't-do list ============ */
+    .wont-do { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
+    .wont-do li {
+      padding-left: 1.5rem;
+      position: relative;
+    }
+    .wont-do li::before {
+      content: "—";
+      position: absolute; left: 0; color: var(--accent); font-family: var(--font-mono);
+    }
+    .wont-do strong { color: var(--text); }
+
+    /* ============ FAQ ============ */
+    .faq { display: grid; gap: 1rem; }
+    .faq details {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-raised);
+      padding: 0;
+    }
+    .faq summary {
+      padding: 1.25rem 1.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      list-style: none;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after {
+      content: "+";
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-size: 1.25rem;
+      transition: none;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .faq summary::after { transition: transform 180ms ease; }
+    }
+    .faq details[open] summary::after { transform: rotate(45deg); }
+    .faq-body { padding: 0 1.5rem 1.25rem; color: var(--text-muted); }
+
+    /* ============ Founder note ============ */
+    .founder {
+      max-width: var(--max-w-prose);
+      margin: 0 auto;
+    }
+    .founder p { margin: 0 0 1.25rem; }
+    .founder .signoff {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-top: 2rem;
+    }
+
+    /* ============ Final CTA / waitlist form ============ */
+    .cta-block {
+      max-width: var(--max-w-prose); margin: 0 auto;
+      text-align: center;
+    }
+    .cta-block h2 { margin-bottom: 1rem; }
+    .cta-block p { color: var(--text-muted); margin-bottom: 2rem; }
+    .waitlist-form {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: 1fr;
+      max-width: 28rem; margin: 0 auto;
+    }
+    @media (min-width: 540px) {
+      .waitlist-form { grid-template-columns: 1fr auto; }
+    }
+    .waitlist-form label { position: absolute; left: -9999px; }
+    .waitlist-form input {
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--border);
+      background: var(--bg-raised);
+      color: var(--text);
+      border-radius: 4px;
+      font: inherit;
+      font-size: var(--fs-body);
+      width: 100%;
+    }
+    .waitlist-form input::placeholder { color: var(--text-muted); }
+    .waitlist-form input:focus-visible { border-color: var(--accent); }
+    .waitlist-hint {
+      font-family: var(--font-mono); font-size: 0.75rem;
+      color: var(--text-muted); text-align: center;
+      margin-top: 1rem; letter-spacing: 0.02em;
+    }
+    .form-status {
+      margin-top: 1rem; font-size: var(--fs-small);
+      min-height: 1.2em;
+    }
+    .form-status[data-state="ok"]    { color: var(--alive); }
+    .form-status[data-state="error"] { color: var(--starved); }
+
+    /* ============ Footer ============ */
+    .site-footer {
+      padding: 3rem 0;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: var(--fs-small);
+    }
+    .site-footer .container { display: grid; gap: 1.5rem; }
+    @media (min-width: 720px) {
+      .site-footer .container { grid-template-columns: auto 1fr auto; align-items: center; }
+    }
+    .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+    .footer-links a { text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-note { font-family: var(--font-mono); letter-spacing: 0.02em; text-align: right; }
+
+    @media (max-width: 719.98px) {
+      .footer-note { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/landing.html" aria-label="Pyxie home">
+        <!-- Inline egg mark, 8 flecks, 32px render -->
+        <svg viewBox="0 0 160 160" shape-rendering="crispEdges" aria-hidden="true" focusable="false">
+          <rect x="70" y="20" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="20" width="10.5" height="10.5" fill="#F5F1E8"/>
+          <rect x="60" y="30" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="30" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="30" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="30" width="10.5" height="10.5" fill="#F5F1E8"/>
+          <rect x="50" y="40" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="40" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="40" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="40" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="40" width="10.5" height="10.5" fill="#FFB4D8"/><rect x="100" y="40" width="10.5" height="10.5" fill="#C9C3D0"/>
+          <rect x="40" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="50" width="10.5" height="10.5" fill="#FF6B35"/><rect x="70" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="50" width="10.5" height="10.5" fill="#C9C3D0"/>
+          <rect x="40" y="60" width="10.5" height="10.5" fill="#A89BC4"/><rect x="50" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="60" width="10.5" height="10.5" fill="#C9C3D0"/>
+          <rect x="40" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="70" width="10.5" height="10.5" fill="#3DBEDC"/><rect x="90" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="70" width="10.5" height="10.5" fill="#C9C3D0"/>
+          <rect x="40" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="80" width="10.5" height="10.5" fill="#C9C3D0"/>
+          <rect x="40" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="90" width="10.5" height="10.5" fill="#8AC34A"/><rect x="60" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="90" width="10.5" height="10.5" fill="#FFEA66"/><rect x="110" y="90" width="10.5" height="10.5" fill="#C9C3D0"/>
+          <rect x="40" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="100" width="10.5" height="10.5" fill="#B8C5D6"/><rect x="100" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="100" width="10.5" height="10.5" fill="#C9C3D0"/>
+          <rect x="40" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="110" width="10.5" height="10.5" fill="#C9C3D0"/>
+          <rect x="50" y="120" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="120" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="120" width="10.5" height="10.5" fill="#C9A47C"/><rect x="80" y="120" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="120" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="120" width="10.5" height="10.5" fill="#C9C3D0"/>
+          <rect x="60" y="130" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="130" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="130" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="130" width="10.5" height="10.5" fill="#C9C3D0"/>
+        </svg>
+        <span class="brand-word">pyx<span class="dot">i</span>e</span>
+      </a>
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" data-theme-toggle>
+        <span data-theme-label>Auto</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO — Variant A (Outcome-led, recommended for cold) -->
+    <section class="section hero" aria-labelledby="hero-heading">
+      <div class="container">
+        <div class="hero-grid">
+          <div>
+            <h1 id="hero-heading">Your pet eats your workouts.</h1>
+            <p>Skip leg day and it gets hungry. Skip a week and it dies — for real, no second chances. A virtual pet that lives or dies by whether you actually move today.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#waitlist">Claim a starter egg →</a>
+              <a class="btn btn-ghost" href="#how">See how it works</a>
+            </div>
+            <p class="hero-meta">3,142 trainers waiting. Hatching this spring.</p>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="hero-art-frame">
+              <!-- Big egg, same 8-fleck mark -->
+              <svg viewBox="0 0 160 160" shape-rendering="crispEdges">
+                <use href="#egg-mark" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="section" aria-labelledby="how-heading">
+      <div class="container">
+        <p class="h2-eyebrow">How Pyxie works</p>
+        <h2 id="how-heading" class="h2">Three steps. No spreadsheets.</h2>
+        <ol class="steps">
+          <li class="step">
+            <p class="step-num">01</p>
+            <h3 class="step-title">Hatch your egg.</h3>
+            <p class="step-body">The game rolls one of eight elemental lines for you — Ember, Tide, Verdant, Gale, Stone, Umbra, Aurora, or Static. You don't pick. Whatever hatches is yours for that pet's life.</p>
+          </li>
+          <li class="step">
+            <p class="step-num">02</p>
+            <h3 class="step-title">Train.</h3>
+            <p class="step-body">Log a workout, your pet eats. Easy walk or hard session — both count, but they grow different creatures. Your reps decide the evolution path, even though your line was decided for you.</p>
+          </li>
+          <li class="step">
+            <p class="step-num">03</p>
+            <h3 class="step-title">Don't stop.</h3>
+            <p class="step-body">Miss a day, stats decay. Miss two, your pet starves. Miss enough, it's gone, and you start over with a new egg.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- PERMADEATH HOOK -->
+    <section class="section hook" aria-labelledby="hook-heading">
+      <div class="container prose">
+        <p class="h2-eyebrow">The hook</p>
+        <h2 id="hook-heading" class="h2">There are no second chances.</h2>
+        <p>Most fitness apps give you streaks you can lose, badges you can re-earn, and "let's get back on track!" emails when you slip.</p>
+        <p><strong>Pyxie doesn't.</strong></p>
+        <p>If your pet dies, it's gone. You release the body, hatch a new egg, and start at stage zero with no record of the pet that was. The streak you built is buried with it.</p>
+        <p class="punch">That sounds harsh. It is. It's also the part that finally makes you go to the gym.</p>
+      </div>
+    </section>
+
+    <!-- ROSTER / EVOLUTION -->
+    <section class="section" aria-labelledby="roster-heading">
+      <div class="container">
+        <p class="h2-eyebrow">The roster</p>
+        <h2 id="roster-heading" class="h2">Sixteen finals per line. Your habits pick which.</h2>
+        <p class="prose">Every time your pet hits an XP threshold, Pyxie looks at the workouts you've actually done and forks the path. Easy walks grow one creature. Burpee sprees grow a different one. You don't choose — your training does.</p>
+
+        <div class="roster-counts" role="list">
+          <div class="count" role="listitem">
+            <div class="count-n">8</div>
+            <div class="count-label">Elemental lines</div>
+          </div>
+          <div class="count" role="listitem">
+            <div class="count-n">248</div>
+            <div class="count-label">Named forms</div>
+          </div>
+          <div class="count" role="listitem">
+            <div class="count-n">128</div>
+            <div class="count-label">Final-stage creatures</div>
+          </div>
+          <div class="count" role="listitem">
+            <div class="count-n">1</div>
+            <div class="count-label">Egg per playthrough</div>
+          </div>
+        </div>
+
+        <ul class="line-strip" aria-label="The eight elemental lines">
+          <li class="line-chip" style="background: var(--ember);"   data-name="Ember"></li>
+          <li class="line-chip" style="background: var(--tide);"    data-name="Tide"></li>
+          <li class="line-chip" style="background: var(--verdant);" data-name="Verdant"></li>
+          <li class="line-chip" style="background: var(--gale);"    data-name="Gale"></li>
+          <li class="line-chip" style="background: var(--stone);"   data-name="Stone"></li>
+          <li class="line-chip" style="background: var(--umbra);"   data-name="Umbra"></li>
+          <li class="line-chip" style="background: var(--aurora);"  data-name="Aurora"></li>
+          <li class="line-chip" style="background: var(--static-line);" data-name="Static"></li>
+        </ul>
+
+        <p class="prose"><strong>248 named forms across eight elemental lines.</strong> You only get one line per egg, rolled at hatch. Most players will only ever meet a handful of forms in a lifetime of pets.</p>
+      </div>
+    </section>
+
+    <!-- WHAT IT ISN'T -->
+    <section class="section" aria-labelledby="wont-heading">
+      <div class="container prose">
+        <p class="h2-eyebrow">What it isn't</p>
+        <h2 id="wont-heading" class="h2">A few things Pyxie won't do.</h2>
+        <ul class="wont-do">
+          <li><strong>No macros, no meal plans, no "fitness journey."</strong> If you wanted a coach, you'd already have one.</li>
+          <li><strong>No "you got this!" notifications.</strong> Your pet sends its own. They're harder to ignore.</li>
+          <li><strong>No buying your way back to a dead pet.</strong> The dead stay dead. That's the whole deal.</li>
+          <li><strong>No ads, no sponsored evolutions, no NFTs.</strong> Just one egg, your reps, and what happens next.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" aria-labelledby="faq-heading">
+      <div class="container prose">
+        <p class="h2-eyebrow">Quick questions</p>
+        <h2 id="faq-heading" class="h2">The ones that come up.</h2>
+        <div class="faq">
+          <details>
+            <summary>Wait, the pet can actually die?</summary>
+            <div class="faq-body">Yes. Two days without food and it's in critical condition. A few more and it's gone. You can hatch another egg whenever you're ready — but it'll be a new pet, not the old one back.</div>
+          </details>
+          <details>
+            <summary>Does it sync with my smartwatch?</summary>
+            <div class="faq-body">At launch: manual logging plus Apple Health and Google Fit. Strava, Garmin, and Whoop on the roadmap. Whatever you log counts — Pyxie doesn't care which app caught the workout.</div>
+          </details>
+          <details>
+            <summary>Is this free?</summary>
+            <div class="faq-body">Free to hatch, free to play, free to lose your pet. We'll have an optional supporter tier later for people who want to keep the lights on. No pay-to-revive, ever.</div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOUNDER NOTE -->
+    <section class="section" aria-labelledby="why-heading">
+      <div class="container founder">
+        <p class="h2-eyebrow">Why this exists</p>
+        <h2 id="why-heading" class="h2">A reason to move that isn't a number.</h2>
+        <p>The hardest part of working out isn't the workout. It's getting up to do it.</p>
+        <p>I built Pyxie for me and my kids. I needed a reason to move that wasn't a number on a scale or a streak in a habit app — something that would actually be sad if I let it down. Something small enough that my children could love it too. A reward to show for the effort, that we could watch grow alongside us.</p>
+        <p>The evolution mechanic is a love letter to <strong>Eevee</strong> — the Pokémon with eight different futures depending on how you raised it. The idea that a single starting point could branch into wildly different creatures based on your choices is the design idea Pyxie is built on. Eight elemental lines instead of one, hidden alt-branches at every stage, 248 named forms across the whole roster — but the spirit is Eevee's.</p>
+        <p>Pyxie isn't a product looking for a market. It's a thing I needed, that I'm sharing in case you need it too.</p>
+        <p class="signoff">— Jonathan</p>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section id="waitlist" class="section" aria-labelledby="cta-heading">
+      <div class="container">
+        <div class="cta-block">
+          <p class="h2-eyebrow">Hatching this spring</p>
+          <h2 id="cta-heading" class="h2" style="margin-left:auto;margin-right:auto;">One egg. Your reps. We'll email when it's time to hatch.</h2>
+          <p>No spam, no drip campaign, no "we miss you" emails six months later. One message when the app opens up, one when your invite is ready. That's it.</p>
+
+          <form class="waitlist-form" novalidate aria-describedby="form-status">
+            <label for="email-input">Email address</label>
+            <input
+              id="email-input"
+              type="email"
+              name="email"
+              autocomplete="email"
+              required
+              placeholder="you@somewhere.com"
+              aria-required="true"
+              aria-describedby="form-status"
+            />
+            <button type="submit" class="btn btn-primary">Claim a starter egg →</button>
+          </form>
+          <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+          <p class="waitlist-hint">3,142 trainers waiting. Hatching this spring.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="brand-word" aria-hidden="true">pyx<span style="color:var(--ember-glow);">i</span>e</span>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="#how">About</a>
+        <a href="/wiki/">Wiki</a>
+        <a href="mailto:hello@pyxie.app">Contact</a>
+      </nav>
+      <p class="footer-note">Made by people who keep dying to their own pets.</p>
+    </div>
+  </footer>
+
+  <!-- Inline sprite definition for re-use in hero -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <g id="egg-mark">
+        <rect x="70" y="20" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="20" width="10.5" height="10.5" fill="#F5F1E8"/>
+        <rect x="60" y="30" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="30" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="30" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="30" width="10.5" height="10.5" fill="#F5F1E8"/>
+        <rect x="50" y="40" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="40" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="40" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="40" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="40" width="10.5" height="10.5" fill="#FFB4D8"/><rect x="100" y="40" width="10.5" height="10.5" fill="#C9C3D0"/>
+        <rect x="40" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="50" width="10.5" height="10.5" fill="#FF6B35"/><rect x="70" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="50" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="50" width="10.5" height="10.5" fill="#C9C3D0"/>
+        <rect x="40" y="60" width="10.5" height="10.5" fill="#A89BC4"/><rect x="50" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="60" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="60" width="10.5" height="10.5" fill="#C9C3D0"/>
+        <rect x="40" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="70" width="10.5" height="10.5" fill="#3DBEDC"/><rect x="90" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="70" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="70" width="10.5" height="10.5" fill="#C9C3D0"/>
+        <rect x="40" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="80" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="80" width="10.5" height="10.5" fill="#C9C3D0"/>
+        <rect x="40" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="90" width="10.5" height="10.5" fill="#8AC34A"/><rect x="60" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="90" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="90" width="10.5" height="10.5" fill="#FFEA66"/><rect x="110" y="90" width="10.5" height="10.5" fill="#C9C3D0"/>
+        <rect x="40" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="100" width="10.5" height="10.5" fill="#B8C5D6"/><rect x="100" y="100" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="100" width="10.5" height="10.5" fill="#C9C3D0"/>
+        <rect x="40" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="50" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="110" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="110" y="110" width="10.5" height="10.5" fill="#C9C3D0"/>
+        <rect x="50" y="120" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="60" y="120" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="120" width="10.5" height="10.5" fill="#C9A47C"/><rect x="80" y="120" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="120" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="100" y="120" width="10.5" height="10.5" fill="#C9C3D0"/>
+        <rect x="60" y="130" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="70" y="130" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="80" y="130" width="10.5" height="10.5" fill="#F5F1E8"/><rect x="90" y="130" width="10.5" height="10.5" fill="#C9C3D0"/>
+      </g>
+    </defs>
+  </svg>
+
+  <script>
+    // Theme toggle: Auto (prefers-color-scheme) → Light → Dark → Auto
+    (function() {
+      var root = document.documentElement;
+      var btn = document.querySelector('[data-theme-toggle]');
+      var label = document.querySelector('[data-theme-label]');
+      if (!btn) return;
+
+      var stored = null;
+      try { stored = localStorage.getItem('pyxie-theme'); } catch (e) {}
+      apply(stored || 'auto');
+
+      btn.addEventListener('click', function() {
+        var current = root.getAttribute('data-theme') || 'auto';
+        var next = current === 'auto' ? 'light' : current === 'light' ? 'dark' : 'auto';
+        apply(next);
+        try { localStorage.setItem('pyxie-theme', next); } catch (e) {}
+      });
+
+      function apply(mode) {
+        if (mode === 'auto') root.removeAttribute('data-theme');
+        else root.setAttribute('data-theme', mode);
+        if (label) label.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+      }
+    })();
+
+    // Waitlist form — front-end stub. Replace action with real endpoint later.
+    (function() {
+      var form   = document.querySelector('.waitlist-form');
+      var status = document.getElementById('form-status');
+      if (!form || !status) return;
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        status.removeAttribute('data-state');
+        var email = (form.elements['email'] && form.elements['email'].value || '').trim();
+        if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+          status.setAttribute('data-state', 'error');
+          status.textContent = 'That email looks off — try one like name@example.com.';
+          return;
+        }
+        status.setAttribute('data-state', 'ok');
+        status.textContent = "You're in. We'll email you the second the gates open — your egg's already waiting, we just don't know what's inside.";
+        form.reset();
+      });
+    })();
+  </script>
+</body>
+</html>

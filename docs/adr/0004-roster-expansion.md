@@ -1,6 +1,6 @@
 # ADR-0004 — Baseline Roster Expansion (Phase 3)
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-05-23
 - Authors: Jonathan V Tran
 
@@ -17,11 +17,11 @@ Expand the baseline roster from 3 to 8 lines over time, drawn from elemental arc
 | `ember`    | Forged in fire                | Existing — explosive intensity      | shipped  |
 | `tide`     | Born of the deep              | Existing — fluid endurance          | shipped  |
 | `verdant`  | Rooted in earth               | Existing — steady strength          | shipped  |
-| `gale`     | Carried on the wind           | Mobility, speed, jump complexity    | next     |
-| `stone`    | Patient and unbroken          | Static holds, isometrics            | next     |
-| `umbra`    | Shaped in shadow              | Night training, dim-cool palette    | later    |
-| `aurora`   | Lit from within               | Recovery focus, pastel palette      | later    |
-| `static`   | Charged and restless          | High-frequency intervals            | later    |
+| `gale`     | Carried on the wind           | Mobility, speed, jump complexity    | shipped  |
+| `stone`    | Patient and unbroken          | Static holds, isometrics            | shipped  |
+| `umbra`    | Shaped in shadow              | Night training, dim-cool palette    | shipped  |
+| `aurora`   | Lit from within               | Recovery focus, pastel palette      | shipped  |
+| `static`   | Charged and restless          | High-frequency intervals            | shipped  |
 
 ### Mechanical changes
 
@@ -52,6 +52,12 @@ If a line proves unfun in playtests, removing it is non-trivial — a user may a
 | Ship all 5 new baselines at once | 5 × 5 stages = 25 minimum new grids before any release. Solo art bandwidth doesn't support it. |
 | Generate baselines procedurally | Output looks uniformly bland; defeats the collectible feel. |
 | User-submitted creatures | Out of scope for a single-developer hobby project; moderation / IP burden. |
+
+## Outcome
+
+All 5 new baselines shipped together rather than rolled out one-per-PR. Final tree: 8 lines × 31 nodes = 248 nodes (vs. 93 in the 3-line tree). Spine art (stage-1 baseline + stage-1 alt) is authored per line; stage-2/3 inherit shared archetype grids with palette swap; stage-4 leaves are synthesized procedurally via `withLeafFlourish()` over the stage-3 parent. Migration of pre-tree saves (legacy `{ line, stage }` pairs) is covered by `legacyLineageId()` and parametric tests across all 8 lines.
+
+Known follow-ups (tracked separately): strengthen `withLeafFlourish` visual differentiation (particularly for `static`, where the cream highlight collides with the yellow body palette); extend `EggSprite` flecks to cover the 5 new lines for equitable blind-box hinting.
 
 ## Out of Scope / Follow-ups
 

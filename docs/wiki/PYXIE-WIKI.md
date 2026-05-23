@@ -29,19 +29,22 @@ Every evolution is a **fork in the road**. Which of two children you get depends
 
 ---
 
-## Five starter lines
+## Eight starter lines
 
-When your egg hatches, the game rolls one of five elemental lines for you — blind-box, independent of egg color. Each evolves through five stages. The line your pet receives is permanent for that pet's life.
+When your egg hatches, the game rolls one of eight elemental lines for you — blind-box, independent of egg color. Each evolves through five stages. The line your pet receives is permanent for that pet's life.
 
 | Line | Theme | Vibe |
 |---|---|---|
 | 🔥 **Ember** | Forged in fire | Aggressive, fierce, glow-in-the-dark warmth |
 | 💧 **Tide** | Born of the deep | Calm, flowing, the patient one |
 | 🌿 **Verdant** | Rooted in earth | Steady, ancient, wild |
-| 🌬️ **Gale** | Carried on the wind | Mobile, quick, sky-bound (ADR-0004) |
-| 🪨 **Stone** | Patient and unbroken | Heavy, mineral, isometric (ADR-0004) |
+| 🌬️ **Gale** | Carried on the wind | Mobile, quick, sky-bound |
+| 🪨 **Stone** | Patient and unbroken | Heavy, mineral, isometric |
+| 🌑 **Umbra** | Shaped in shadow | Cool dusk palette, night-training feel |
+| ✨ **Aurora** | Lit from within | Pastel and gentle, recovery-coded |
+| ⚡ **Static** | Charged and restless | Electric yellows, high-frequency intervals |
 
-There is no "best" line — only the one that looks coolest evolving in your hand. All five follow the same XP curve.
+There is no "best" line — only the one that looks coolest evolving in your hand. All eight follow the same XP curve. The full roster spans **248 nodes** (31 per line) across 5 stages, with each pet getting a unique hue tint at hatch so no two are visually identical.
 
 ---
 

@@ -1,19 +1,12 @@
-import { useMemo } from 'react';
 import { usePyxie } from '../store/usePyxie';
-import type { Line } from '../store/types';
 import { EggSprite } from '../components/EggSprite';
 import { HATCH_WORKOUTS } from '../data/constants';
-
-const EGG_COLORS: Line[] = ['ember', 'tide', 'verdant'];
 
 export function Hatch() {
   const starterName = usePyxie((s) => s.ui.starterName);
   const setStarterName = usePyxie((s) => s.setStarterName);
   const placeEgg = usePyxie((s) => s.placeEgg);
 
-  // Session-stable visual flavor for the reveal card. The *actual* egg color
-  // is rolled at placeEgg time — this is just so the preview doesn't flicker.
-  const previewColor = useMemo<Line>(() => EGG_COLORS[Math.floor(Math.random() * EGG_COLORS.length)], []);
   const name = starterName ?? '';
 
   return (
@@ -22,7 +15,7 @@ export function Hatch() {
       <div className="panel-sub">You won't know what's inside until it hatches</div>
       <div className="starter-grid" style={{ justifyContent: 'center' }}>
         <div className="starter-card selected">
-          <EggSprite line={previewColor} size={120} />
+          <EggSprite size={120} />
           <div className="starter-name">???</div>
           <div className="starter-type">Hatches in {HATCH_WORKOUTS} workouts</div>
         </div>

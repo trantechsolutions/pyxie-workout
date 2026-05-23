@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <style>
+    .bg     { fill: #F5F1E8; }
+    .title  { font-family: "Departure Mono", "JetBrains Mono", ui-monospace, monospace; font-size: 22px; font-weight: 500; fill: #14121C; letter-spacing: 0.04em; }
+    .label  { font-family: "Geist", system-ui, sans-serif; font-size: 18px; font-weight: 600; fill: #14121C; }
+    .hex    { font-family: "Departure Mono", "JetBrains Mono", ui-monospace, monospace; font-size: 13px; fill: #5A5566; letter-spacing: 0.02em; }
+    .footer { font-family: "Geist", system-ui, sans-serif; font-size: 13px; fill: #5A5566; }
+  </style>
+  <rect width="800" height="500" class="bg"/>
+  <text x="40" y="50" class="title">PYXIE — ELEMENTAL PALETTE</text>
+  <line x1="40" y1="68" x2="760" y2="68" stroke="#D6D2DE" stroke-width="1"/>
+
+  <!-- Row 1: ember, tide, verdant, gale -->
+  <g transform="translate(40 90)">
+    <rect width="160" height="100" fill="#FF6B35"/>
+    <text x="0" y="125" class="label">Ember</text>
+    <text x="0" y="146" class="hex">#FF6B35</text>
+  </g>
+  <g transform="translate(220 90)">
+    <rect width="160" height="100" fill="#3DBEDC"/>
+    <text x="0" y="125" class="label">Tide</text>
+    <text x="0" y="146" class="hex">#3DBEDC</text>
+  </g>
+  <g transform="translate(400 90)">
+    <rect width="160" height="100" fill="#8AC34A"/>
+    <text x="0" y="125" class="label">Verdant</text>
+    <text x="0" y="146" class="hex">#8AC34A</text>
+  </g>
+  <g transform="translate(580 90)">
+    <rect width="160" height="100" fill="#B8C5D6"/>
+    <text x="0" y="125" class="label">Gale</text>
+    <text x="0" y="146" class="hex">#B8C5D6</text>
+  </g>
+
+  <!-- Row 2: stone, umbra, aurora, static -->
+  <g transform="translate(40 260)">
+    <rect width="160" height="100" fill="#C9A47C"/>
+    <text x="0" y="125" class="label">Stone</text>
+    <text x="0" y="146" class="hex">#C9A47C</text>
+  </g>
+  <g transform="translate(220 260)">
+    <rect width="160" height="100" fill="#A89BC4"/>
+    <text x="0" y="125" class="label">Umbra</text>
+    <text x="0" y="146" class="hex">#A89BC4</text>
+  </g>
+  <g transform="translate(400 260)">
+    <rect width="160" height="100" fill="#FFB4D8"/>
+    <text x="0" y="125" class="label">Aurora</text>
+    <text x="0" y="146" class="hex">#FFB4D8</text>
+  </g>
+  <g transform="translate(580 260)">
+    <rect width="160" height="100" fill="#FFEA66"/>
+    <text x="0" y="125" class="label">Static</text>
+    <text x="0" y="146" class="hex">#FFEA66</text>
+  </g>
+
+  <text x="40" y="480" class="footer">Eight elemental lines. One blind hatch.</text>
+</svg>

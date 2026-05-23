@@ -4,7 +4,7 @@ import { applyWorkoutResult } from '../../lib/progression';
 import { beep } from '../../lib/audio';
 import type { PyxieSlice } from './types';
 
-const HATCHABLE_BASELINES: Line[] = ['ember', 'tide', 'verdant', 'gale', 'stone'];
+const HATCHABLE_BASELINES: Line[] = ['ember', 'tide', 'verdant', 'gale', 'stone', 'umbra', 'aurora', 'static'];
 
 // Tally the workout into the pet's running counts and, if the pet is still an
 // egg, count this workout toward the hatch threshold. On hatch, a baseline
