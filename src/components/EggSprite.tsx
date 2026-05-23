@@ -1,18 +1,16 @@
 // Generic blind-box egg — single design shared by every line so the silhouette
 // can't telegraph what's inside before it hatches. Sourced from
-// docs/marketing/logo/pyxie-egg.svg. One fleck per roster line (8 total).
+// docs/marketing/logo/pyxie-egg.svg. One fleck per roster line.
 //
-// 16x16 grid. Char → color:
-//   C = #F5F1E8  cream shell
-//   S = #C9C3D0  right-side shadow
-//   O = #FF6B35  ember-orange fleck
-//   B = #3DBEDC  tide-cyan fleck
-//   G = #8AC34A  verdant-green fleck
-//   L = #B8C5D6  gale-sky fleck
-//   N = #C9A47C  stone-tan fleck
-//   U = #A89BC4  umbra-violet fleck
-//   A = #FFB4D8  aurora-pink fleck
-//   Y = #FFEA66  static-yellow fleck
+// Shell + shadow chars are local to this file; per-line fleck chars and colors
+// derive from `LINE_REGISTRY[line].eggFleck` (ADR-0005). Adding a 9th line
+// only requires choosing a free fleck char and slotting it into this grid.
+import type { Line } from '../store/types';
+import { LINE_REGISTRY } from '../data/lineRegistry';
+
+const SHELL_CHAR = 'C';
+const SHADOW_CHAR = 'S';
+
 const EGG_GRID: string[] = [
   '................',
   '................',
@@ -32,18 +30,17 @@ const EGG_GRID: string[] = [
   '................',
 ];
 
-const COLORS: Record<string, string> = {
-  C: '#F5F1E8',
-  S: '#C9C3D0',
-  O: '#FF6B35',
-  B: '#3DBEDC',
-  G: '#8AC34A',
-  L: '#B8C5D6',
-  N: '#C9A47C',
-  U: '#A89BC4',
-  A: '#FFB4D8',
-  Y: '#FFEA66',
-};
+const COLORS: Record<string, string> = (() => {
+  const out: Record<string, string> = {
+    [SHELL_CHAR]: '#F5F1E8',
+    [SHADOW_CHAR]: '#C9C3D0',
+  };
+  for (const line of Object.keys(LINE_REGISTRY) as Line[]) {
+    const { char, color } = LINE_REGISTRY[line].eggFleck;
+    out[char] = color;
+  }
+  return out;
+})();
 
 interface Props {
   size?: number;

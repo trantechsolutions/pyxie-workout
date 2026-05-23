@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "export:sprites": "vite-node scripts/export-sprites.ts",
+    "verify:sprites": "npm run export:sprites && git diff --exit-code docs/wiki/sprites/"
   },
   "dependencies": {
     "react": "^18.3.1",

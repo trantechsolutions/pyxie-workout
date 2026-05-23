@@ -1,10 +1,9 @@
-import type { Intensity, Complexity, ActiveWorkout, WorkoutHistory, Pet, Line } from '../types';
+import type { Intensity, Complexity, ActiveWorkout, WorkoutHistory, Pet } from '../types';
 import { pickExercises, buildSegments } from '../../lib/workout';
 import { applyWorkoutResult } from '../../lib/progression';
 import { beep } from '../../lib/audio';
 import type { PyxieSlice } from './types';
-
-const HATCHABLE_BASELINES: Line[] = ['ember', 'tide', 'verdant', 'gale', 'stone', 'umbra', 'aurora', 'static'];
+import { HATCHABLE_BASELINES } from '../../data/lineRegistry';
 
 // Tally the workout into the pet's running counts and, if the pet is still an
 // egg, count this workout toward the hatch threshold. On hatch, a baseline

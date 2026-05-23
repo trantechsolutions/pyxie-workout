@@ -1,6 +1,8 @@
 import type { Line } from '../store/types';
 import { CREATURES } from './creatures';
 import altGridsJson from './altGrids.json';
+import { withLeafFlourish as makeLeafFlourishTransform } from '../lib/spriteRenderer';
+import { LINE_REGISTRY, parseGrid, type Grid } from './lineRegistry';
 
 // Branching evolution tree (ADR-0003).
 //
@@ -468,6 +470,27 @@ const NEW_GRIDS: Record<string, string[]> = {
   ...ALT_GRIDS,
 };
 
+// Seed baseline (stage-0) grids from the registry so EVOLUTION_TREE is the
+// sole runtime store. Pre-tree saves still flow through `legacyLineageId`.
+for (const line of Object.keys(LINE_REGISTRY) as Line[]) {
+  NEW_GRIDS[line] = [...LINE_REGISTRY[line].baselineGrid];
+}
+
+// Seed spine forms (stage 1..4 along the all-primary `p*` path) from the
+// legacy CREATURES catalog. This keeps the tree as the canonical store while
+// CREATURES becomes deprecated migration-only data.
+for (const line of Object.keys(LINE_REGISTRY) as Line[]) {
+  const spine = CREATURES[line];
+  if (!spine) continue;
+  for (let stage = 1; stage <= MAX_STAGE; stage++) {
+    const path = 'p'.repeat(stage);
+    const id = `${line}-${path}`;
+    if (!NEW_GRIDS[id] && spine[stage - 1]?.grid) {
+      NEW_GRIDS[id] = spine[stage - 1].grid;
+    }
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Stage-4 leaf synthesis. Each non-spine leaf inherits its stage-3 parent's
 // silhouette and overlays a small "ascension" flourish so it reads as a final
@@ -479,26 +502,25 @@ const NEW_GRIDS: Record<string, string[]> = {
 // grid (Drakorath, Leviathos, etc.).
 // -----------------------------------------------------------------------------
 
-function overlayCell(rows: string[][], y: number, x: number, ch: string): void {
-  if (y < 0 || y > 15 || x < 0 || x > 15) return;
-  if (rows[y][x] === '.') rows[y][x] = ch;
-}
+// `withLeafFlourish` now lives in the shared renderer's transform pipeline
+// (ADR-0005). The factory is parameterised by the owning line's palette so
+// the crown overlay can detect and avoid the slot-4↔body collision documented
+// in ADR-0005 follow-up #7 (the static-line cream-on-cream bug).
+const LEAF_BY_LINE: Record<Line, { p: ReturnType<typeof makeLeafFlourishTransform>; a: ReturnType<typeof makeLeafFlourishTransform> }> =
+  Object.fromEntries(
+    (Object.keys(LINE_REGISTRY) as Line[]).map((line) => [
+      line,
+      {
+        p: makeLeafFlourishTransform('p', LINE_REGISTRY[line].palette),
+        a: makeLeafFlourishTransform('a', LINE_REGISTRY[line].palette),
+      },
+    ]),
+  ) as Record<Line, { p: ReturnType<typeof makeLeafFlourishTransform>; a: ReturnType<typeof makeLeafFlourishTransform> }>;
 
-function withLeafFlourish(parent: string[], suffix: 'p' | 'a'): string[] {
-  const rows = parent.map((r) => r.split(''));
-  if (suffix === 'p') {
-    // Soft cream crown across the head row — index 5 (highlight) every other column.
-    for (const x of [5, 7, 9, 10]) overlayCell(rows, 0, x, '5');
-    // Mirror dot at corners of row 1 for a halo bracket.
-    overlayCell(rows, 1, 4, '5');
-    overlayCell(rows, 1, 11, '5');
-  } else {
-    // Angular shadow spikes at the bottom — index 4 (shadow) framing the feet.
-    for (const x of [2, 3, 12, 13]) overlayCell(rows, 15, x, '4');
-    overlayCell(rows, 14, 1, '4');
-    overlayCell(rows, 14, 14, '4');
-  }
-  return rows.map((r) => r.join(''));
+function withLeafFlourish(parent: string[], suffix: 'p' | 'a', line: Line): string[] {
+  const grid = parseGrid(parent);
+  const transformed = LEAF_BY_LINE[line][suffix](grid);
+  return [...transformed];
 }
 
 const STAGE3_PATHS = ['ppp', 'ppa', 'pap', 'paa', 'app', 'apa', 'aap', 'aaa'] as const;
@@ -519,8 +541,8 @@ for (const line of LEAF_LINES) {
     const parent = stage3ParentGrid(line, path);
     if (!parent) continue;
     // `*-pppp` is the spine final — keeps its authored CREATURES grid.
-    if (path !== 'ppp') NEW_GRIDS[`${line}-${path}p`] = withLeafFlourish(parent, 'p');
-    NEW_GRIDS[`${line}-${path}a`] = withLeafFlourish(parent, 'a');
+    if (path !== 'ppp') NEW_GRIDS[`${line}-${path}p`] = withLeafFlourish(parent, 'p', line);
+    NEW_GRIDS[`${line}-${path}a`] = withLeafFlourish(parent, 'a', line);
   }
 }
 
@@ -607,3 +629,83 @@ export function legacyLineageId(line: Line, stage: number): string {
  * branches the user actually visits — most playthroughs only render a handful.)
  */
 export const TREE_NODE_COUNT = Object.keys(EVOLUTION_TREE).length;
+
+// =============================================================================
+// resolveGrid (ADR-0005).
+//
+// Single tree lookup with a procedural ancestor-walk for art-pending nodes.
+// Replaces the prior three-tier `Sprite.tsx` fallback. CREATURES is no longer
+// consulted at runtime — its baseline + spine grids are seeded into the tree
+// at module load above.
+// =============================================================================
+
+/**
+ * Walk a lineageId's ancestors toward the baseline until an authored grid is
+ * found. Used as a procedural placeholder for stage-3/4 art-pending nodes.
+ * Returns null only for ids that don't belong to a known line.
+ */
+function ancestorWalk(lineageId: string): EvolutionNode | null {
+  // Trim one path char at a time. "ember-papa" → "ember-pap" → ... → "ember-p" → "ember".
+  let id = lineageId;
+  for (let guard = 0; guard < 10 && id; guard++) {
+    const node = EVOLUTION_TREE[id];
+    if (node?.grid) return node;
+    const dash = id.lastIndexOf('-');
+    if (dash < 0) return EVOLUTION_TREE[id] ?? null;
+    const path = id.slice(dash + 1);
+    if (path.length <= 1) {
+      // next step strips the path entirely → bare line key
+      id = id.slice(0, dash);
+    } else {
+      id = id.slice(0, dash) + '-' + path.slice(0, -1);
+    }
+  }
+  return null;
+}
+
+export interface ResolvedGrid {
+  grid: Grid;
+  /** True if the returned grid came from an ancestor (art-pending leaf). */
+  placeholder: boolean;
+}
+
+/**
+ * Resolve a 16×16 grid for a given lineage / line / stage.
+ *
+ * Priority:
+ *   1. Authored grid on the target `EVOLUTION_TREE` node (validated).
+ *   2. Nearest ancestor on the same lineage path (procedural placeholder).
+ *   3. Line baseline grid from `LINE_REGISTRY` (deepest fallback).
+ *
+ * All return values are validated through `parseGrid` so callers receive a
+ * branded `Grid` regardless of source.
+ */
+export function resolveGrid(line: Line, stage: number, lineageId?: string): ResolvedGrid {
+  const clampedStage = Math.max(0, Math.min(MAX_STAGE, stage));
+  const legacyId = legacyLineageId(line, clampedStage);
+  // A caller-supplied lineageId is a "placeholder request" any time it does
+  // not match the canonical spine id for (line, stage). This preserves the
+  // legacy three-tier semantics from the pre-ADR-0005 Sprite.tsx.
+  const placeholderRequest = !!lineageId && lineageId !== legacyId;
+
+  // 1. Authored target node.
+  if (lineageId) {
+    const target = EVOLUTION_TREE[lineageId];
+    if (target?.grid) return { grid: parseGrid(target.grid, lineageId), placeholder: false };
+  }
+
+  // 2. Legacy/spine fallback — same line+stage on the all-primary spine.
+  const spine = EVOLUTION_TREE[legacyId];
+  if (spine?.grid) {
+    return { grid: parseGrid(spine.grid, legacyId), placeholder: placeholderRequest };
+  }
+
+  // 3. Procedural ancestor walk for art-pending ids.
+  const ancestor = lineageId ? ancestorWalk(lineageId) : null;
+  if (ancestor?.grid) {
+    return { grid: parseGrid(ancestor.grid, ancestor.id), placeholder: true };
+  }
+
+  // 4. Registry baseline — always authored.
+  return { grid: LINE_REGISTRY[line].baselineGrid, placeholder: placeholderRequest };
+}

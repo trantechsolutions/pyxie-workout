@@ -1,6 +1,7 @@
 import type { Line } from '../store/types';
-import { CREATURES, PALETTES } from '../data/creatures';
-import { EVOLUTION_TREE, legacyLineageId } from '../data/evolutionTree';
+import { LINE_REGISTRY } from '../data/lineRegistry';
+import { resolveGrid } from '../data/evolutionTree';
+import { renderGrid } from '../lib/spriteRenderer';
 
 interface Props {
   line: Line;
@@ -24,53 +25,22 @@ function hueDegFromSeed(seed: number): number {
   return (mixed % 37) - 18; // -18..+18
 }
 
-/**
- * Resolve a 16x16 grid for the given lineage/line/stage.
- * Priority:
- *   1. Authored grid on the EVOLUTION_TREE node.
- *   2. Legacy CREATURES[line][stage] (the all-primary spine).
- *   3. Authored grid of the nearest ancestor on the spine (procedural placeholder).
- */
-function resolveGrid(line: Line, stage: number, lineageId?: string): { grid: string[]; placeholder: boolean } {
-  if (lineageId) {
-    const node = EVOLUTION_TREE[lineageId];
-    if (node?.grid) return { grid: node.grid, placeholder: false };
-  }
-  // Walk down the canonical spine until we find an authored grid at this stage.
-  const fallbackId = lineageId ?? legacyLineageId(line, stage);
-  const fallbackNode = EVOLUTION_TREE[fallbackId];
-  if (fallbackNode?.grid) return { grid: fallbackNode.grid, placeholder: false };
-  // Final fallback — the original linear CREATURES table. Always authored for the spine.
-  const clamped = Math.max(0, Math.min(4, stage));
-  return { grid: CREATURES[line][clamped].grid, placeholder: !!lineageId && lineageId !== legacyLineageId(line, stage) };
-}
-
 export function Sprite({ line, stage, size = 200, onClick, lineageId, seed }: Props) {
   const { grid, placeholder } = resolveGrid(line, stage, lineageId);
-  const palette = PALETTES[line];
+  const palette = LINE_REGISTRY[line].palette;
   const hueDeg = typeof seed === 'number' ? hueDegFromSeed(seed) : 0;
   const cell = size / 16;
-  const rects: JSX.Element[] = [];
-  for (let y = 0; y < 16; y++) {
-    for (let x = 0; x < 16; x++) {
-      const ch = grid[y][x];
-      if (ch === '.') continue;
-      let color: string;
-      if (ch === '7') color = '#ffffff';
-      else if (ch === '8') color = '#0a0a0a';
-      else color = palette[parseInt(ch, 10) - 1] ?? '#888';
-      rects.push(
-        <rect
-          key={`${x}-${y}`}
-          x={x * cell}
-          y={y * cell}
-          width={cell + 0.5}
-          height={cell + 0.5}
-          fill={color}
-        />
-      );
-    }
-  }
+  const rendered = renderGrid(grid, palette, [], { size });
+  const rects = rendered.map((r, i) => (
+    <rect
+      key={i}
+      x={r.x}
+      y={r.y}
+      width={r.w}
+      height={r.h}
+      fill={r.fill}
+    />
+  ));
   // Placeholder badge: small marker in the corner so art-pending nodes are visibly distinct.
   const badge = placeholder ? (
     <g>

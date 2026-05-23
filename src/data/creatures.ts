@@ -1,18 +1,29 @@
 import type { Line } from '../store/types';
+import { LINE_REGISTRY } from './lineRegistry';
 
-export const PALETTES: Record<Line, readonly string[]> = {
-  ember:   ['#ff4422','#ff8844','#ffcc66','#aa1100','#ffee99','#5a0d00','#ffffff','#1a0a0a'],
-  tide:    ['#3366cc','#5599ee','#88ccff','#1a3380','#ccf2ff','#0a1a4a','#ffffff','#0a0a1a'],
-  verdant: ['#3aaa45','#66dd55','#bbee88','#1a6622','#e8ffcc','#4a3320','#ffffff','#0a1a0a'],
-  gale:    ['#a0a8b8','#c8d2e0','#e8eef5','#4a5566','#fbfcfd','#1a2030','#ffffff','#0a0a14'],
-  stone:   ['#8a7866','#b8a890','#d8c9b0','#3a2e22','#ede5d0','#1a1410','#ffffff','#0a0a08'],
-  umbra:   ['#7c6d8f','#a89bc4','#d8c8ec','#221830','#f0e6ff','#0c0716','#ffffff','#0a0612'],
-  aurora:  ['#ffb4d8','#b8d8ff','#ffe4b4','#9070b4','#fff8dc','#3a2a5a','#ffffff','#1a0e2a'],
-  static:  ['#ffd633','#ffea66','#fff5b3','#664400','#ffffe6','#1a1500','#ffffff','#0a0a00'],
-};
+// ADR-0005: PALETTES is derived from LINE_REGISTRY. Slots 1–6 of the grid char
+// alphabet map to palette[0..5]; slots 7/8 (white/black) are renderer constants
+// and no longer live in this array. The length-6 contract is enforced by the
+// `Palette` tuple type in `lineRegistry.ts`.
+export const PALETTES: Record<Line, readonly string[]> = Object.fromEntries(
+  (Object.keys(LINE_REGISTRY) as Line[]).map((line) => [line, LINE_REGISTRY[line].palette]),
+) as unknown as Record<Line, readonly string[]>;
 
+/**
+ * @deprecated ADR-0005. The legacy linear catalog. Retained only as a migration
+ * helper for pre-`EVOLUTION_TREE` save data and as the seed source for the
+ * tree's spine grids at module load. Do not consume from runtime UI code.
+ */
 export interface CreatureDef { name: string; stage: number; grid: string[]; }
 
+/**
+ * @deprecated ADR-0005. The legacy 3×5 spine. `EVOLUTION_TREE` is now the sole
+ * runtime source of truth for sprite grids — this map exists only so
+ * `legacyLineageId()` can migrate pre-tree saves and so spine forms can be
+ * seeded into the tree at module load.
+ *
+ * New consumers must read from `EVOLUTION_TREE` and use `resolveGrid()`.
+ */
 export const CREATURES: Record<Line, CreatureDef[]> = {
   ember: [
     { name: 'Emberling', stage: 1, grid: [
@@ -572,13 +583,11 @@ export const CREATURES: Record<Line, CreatureDef[]> = {
   ],
 };
 
-export const LINE_INFO: Record<Line, { label: string; tagline: string; color: string }> = {
-  ember:   { label: 'Ember',   tagline: 'Forged in fire',     color: '#ff7f50' },
-  tide:    { label: 'Tide',    tagline: 'Born of the deep',   color: '#7df9ff' },
-  verdant: { label: 'Verdant', tagline: 'Rooted in earth',    color: '#7fff7f' },
-  gale:    { label: 'Gale',    tagline: 'Carried on the wind',  color: '#c8d2e0' },
-  stone:   { label: 'Stone',   tagline: 'Patient and unbroken', color: '#b8a890' },
-  umbra:   { label: 'Umbra',   tagline: 'Shaped in shadow',     color: '#a89bc4' },
-  aurora:  { label: 'Aurora',  tagline: 'Lit from within',      color: '#ffb4d8' },
-  static:  { label: 'Static',  tagline: 'Charged and restless', color: '#ffea66' },
-};
+// ADR-0005: derived from LINE_REGISTRY. Adding a new line no longer requires
+// keeping LINE_INFO in sync with PALETTES, HATCHABLE_BASELINES, etc.
+export const LINE_INFO: Record<Line, { label: string; tagline: string; color: string }> = Object.fromEntries(
+  (Object.keys(LINE_REGISTRY) as Line[]).map((line) => {
+    const def = LINE_REGISTRY[line];
+    return [line, { label: def.label, tagline: def.tagline, color: def.swatch }];
+  }),
+) as Record<Line, { label: string; tagline: string; color: string }>;
