@@ -3,7 +3,11 @@
 .claude
 node_modules
 scripts
-docs
+docs/adr
+docs/audit
+docs/brainstorming
+docs/marketing
+docs/README.md
 memory
 tests
 *.log
