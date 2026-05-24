@@ -13,21 +13,40 @@ import type { ConstellationMember, ConstellationStatus } from '../lib/familyType
 // "active / resting / asleep" — explicitly NOT "inactive", "lapsed",
 // "fallen behind", or any synonym of absence.
 
-const PANE_SIZE = 320;
-const CENTER = PANE_SIZE / 2;
-const SPRITE_SIZE = 56;
-
-const RADIUS_BY_STATUS: Record<ConstellationStatus, number> = {
-  active: PANE_SIZE * 0.30,
-  drifting: PANE_SIZE * 0.55 / 2,
-  sleeping: PANE_SIZE * 0.75 / 2,
-};
+// Constellation geometry — ported from constellation.pen. Members are placed
+// at equal angular intervals on a single elliptical orbit. Status is
+// communicated by the pill below each pyxie, not by position; every member
+// gets the same purple "pyxie aura" visual.
+const PANE_W = 320;
+const PANE_H = 280;
+const CENTER_X = PANE_W / 2;
+const CENTER_Y = PANE_H / 2;
+const ELLIPSE_RX = 120;
+const ELLIPSE_RY = 78;
+const SLOT_BOX = 60;      // outer rounded-square that contains the sprite
+const SPRITE_SIZE = 44;   // pixel-art sprite fitted inside the box
+// Slot ring (76px) and halo (96px) sizes live in CSS only — they're purely
+// decorative chrome, scaled relative to the slot box.
 
 const STATUS_COPY: Record<ConstellationStatus, string> = {
   active: 'active',
   drifting: 'resting',
   sleeping: 'asleep',
 };
+
+// Deterministic starfield — fixed seed so positions don't shuffle between
+// renders. Roughly matches the density and size variation in the .pen design.
+interface Star { x: number; y: number; r: number; o: number }
+const STARS: Star[] = (() => {
+  let s = 7;
+  const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  return Array.from({ length: 28 }, () => ({
+    x: Math.round(r() * PANE_W),
+    y: Math.round(r() * PANE_H),
+    r: r() > 0.65 ? 1.2 : 0.7,
+    o: 0.35 + r() * 0.3,
+  }));
+})();
 
 interface LaidOutMember {
   member: ConstellationMember;
@@ -37,20 +56,20 @@ interface LaidOutMember {
 
 function layOutMembers(members: ConstellationMember[]): LaidOutMember[] {
   if (members.length === 0) return [];
-  // Equal angular spacing, caller (members[0]) at 12 o'clock.
+  // Equal angular spacing on the ellipse, caller (members[0]) at 12 o'clock.
+  // Spot count == member count — no placeholders for empty seats.
   const step = (Math.PI * 2) / members.length;
   return members.map((m, i) => {
     const angle = -Math.PI / 2 + step * i;
-    const radius = RADIUS_BY_STATUS[m.status];
     return {
       member: m,
-      x: CENTER + Math.cos(angle) * radius - SPRITE_SIZE / 2,
-      y: CENTER + Math.sin(angle) * radius - SPRITE_SIZE / 2,
+      x: CENTER_X + Math.cos(angle) * ELLIPSE_RX - SLOT_BOX / 2,
+      y: CENTER_Y + Math.sin(angle) * ELLIPSE_RY - SLOT_BOX / 2,
     };
   });
 }
 
-function MemberPyxie({
+function MemberSlot({
   member,
   celebrating,
   tiltDeg,
@@ -59,26 +78,33 @@ function MemberPyxie({
   celebrating: boolean;
   tiltDeg: number;
 }) {
-  // ADR-0007 Milestone 6: when this pyxie is the celebrant, layer the "wake
-  // up" animation. When another pyxie is celebrating, this one subtly tilts
-  // toward them for the duration.
-  const cls =
-    `family-pyxie family-pyxie--${member.status}` +
-    (celebrating ? ' family-pyxie--celebrating' : '') +
-    (tiltDeg !== 0 ? ' family-pyxie--tilted' : '');
+  // Visual chrome ported from constellation.pen: blurred purple halo,
+  // bright purple ring, dark rounded-square box with the sprite inside.
+  // Status differentiation lives below in the pill — the slot chrome is
+  // consistent across statuses (the "pyxie aura" the design implies).
+  const slotCls =
+    `family-slot family-slot--${member.status}` +
+    (celebrating ? ' family-slot--celebrating' : '') +
+    (tiltDeg !== 0 ? ' family-slot--tilted' : '');
   const tiltStyle = tiltDeg !== 0 && !celebrating
     ? { transform: `rotate(${tiltDeg.toFixed(2)}deg)` }
     : undefined;
-  if (!member.sprite) {
-    return (
-      <div className={cls} style={tiltStyle}>
-        <EggSprite size={SPRITE_SIZE} />
-      </div>
-    );
-  }
-  const props = spriteFromSnapshot(member.sprite);
+
+  // Egg only when the member's pyxie genuinely is an egg (snapshot carries
+  // an empty lineage_id, matching petSlice convention) — or when no snapshot
+  // exists yet (transient: useSyncPetSnapshot will push one shortly).
+  const isEgg = !member.sprite || member.sprite.lineage_id === '';
+  const inner = isEgg
+    ? <EggSprite size={SPRITE_SIZE} />
+    : <Sprite {...spriteFromSnapshot(member.sprite!)} size={SPRITE_SIZE} />;
+
   return (
-    <div className={cls} style={tiltStyle}>
+    <div className={slotCls} style={tiltStyle}>
+      <div className="family-slot-halo" aria-hidden="true" />
+      <div className="family-slot-ring" aria-hidden="true" />
+      <div className="family-slot-box">
+        {inner}
+      </div>
       {celebrating && (
         <div className="family-celebration-sparkles" aria-hidden="true">
           <span className="family-sparkle" /><span className="family-sparkle" />
@@ -94,13 +120,6 @@ function MemberPyxie({
       {member.status === 'sleeping' && !celebrating && (
         <div className="family-sleep-z" aria-hidden="true">z</div>
       )}
-      <Sprite
-        line={props.line}
-        stage={props.stage}
-        size={SPRITE_SIZE}
-        lineageId={props.lineageId}
-        seed={props.seed}
-      />
     </div>
   );
 }
@@ -201,20 +220,38 @@ export function Family() {
 
       <div
         className="family-constellation"
-        style={{ width: PANE_SIZE, height: PANE_SIZE, position: 'relative' }}
+        style={{ width: PANE_W, height: PANE_H, position: 'relative' }}
       >
-        <div
-          className="family-campfire"
-          style={{ left: CENTER - 12, top: CENTER - 12 }}
+        {/* Background: starfield + orbit ring, drawn in one SVG so the
+            stars stay perfectly aligned with the ellipse. */}
+        <svg
+          className="family-constellation-bg"
+          width={PANE_W}
+          height={PANE_H}
+          viewBox={`0 0 ${PANE_W} ${PANE_H}`}
           aria-hidden="true"
-        />
+        >
+          {STARS.map((s, i) => (
+            <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#FFFFFF" opacity={s.o} />
+          ))}
+          <ellipse
+            cx={CENTER_X}
+            cy={CENTER_Y}
+            rx={ELLIPSE_RX}
+            ry={ELLIPSE_RY}
+            fill="none"
+            stroke="#4A6ABA"
+            strokeOpacity="0.35"
+            strokeWidth="1"
+          />
+        </svg>
         {placed.map(({ member, x, y }) => (
           <div
             key={member.user_id}
             className="family-pyxie-wrap"
             style={{ position: 'absolute', left: x, top: y }}
           >
-            <MemberPyxie
+            <MemberSlot
               member={member}
               celebrating={celebrating.includes(member.user_id)}
               tiltDeg={tilts[member.user_id] ?? 0}

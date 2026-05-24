@@ -51,14 +51,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Auth verification failed' });
   }
 
+  // Optional client-provided display_name (e.g. the first name from Clerk).
+  // When present and non-empty after sanitization, it overrides the fallback
+  // and updates the existing row — solving the "everyone shows up as Friend"
+  // case when the JWT lacked a usable email local-part.
+  const body = req.body as { display_name?: unknown } | undefined;
+  const clientName = typeof body?.display_name === 'string'
+    ? sanitizeDisplayName(body.display_name)
+    : '';
   const fallbackName = deriveDisplayName(user.email);
+  const finalName = clientName.length > 0 ? clientName : fallbackName;
 
   try {
     const sql = getSql();
     const rows = (await sql`
       INSERT INTO users (id, display_name)
-      VALUES (${user.userId}, ${fallbackName})
-      ON CONFLICT (id) DO UPDATE SET updated_at = NOW()
+      VALUES (${user.userId}, ${finalName})
+      ON CONFLICT (id) DO UPDATE
+        SET display_name = ${finalName},
+            updated_at = NOW()
       RETURNING id, display_name, created_at, updated_at
     `) as unknown as UserRow[];
 

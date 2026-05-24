@@ -26,18 +26,23 @@ function resetStore() {
     evolved: null,
     eventQueue: [],
     inFamily: false,
+    familyPayload: null,
+    familyHydrated: false,
   });
   localStorage.clear();
 }
 
 function setClerk(opts: { signedIn: boolean; userId?: string }) {
+  // `loaded: true` is required — useClerkSignedIn polls for this before
+  // reading user/session, so without it tests time out on the loading row.
   (window as unknown as { Clerk?: unknown }).Clerk = opts.signedIn
     ? {
+        loaded: true,
         user: { id: opts.userId ?? 'user_1' },
         session: { getToken: async () => 'tok' },
         openSignIn: () => {},
       }
-    : { user: null, session: null, openSignIn: () => {} };
+    : { loaded: true, user: null, session: null, openSignIn: () => {} };
 }
 
 function jsonResponse(status: number, body: unknown): Response {
@@ -55,27 +60,19 @@ afterEach(() => {
 });
 
 describe('FamilySection transitions', () => {
-  it('toggle OFF: shows the enable copy and no sign-in UI', () => {
-    // familyFeaturesEnabled defaults to false in DEFAULT_SETTINGS.
-    render(<FamilySection />);
-    expect(screen.getByText('Family features')).toBeInTheDocument();
-    expect(screen.getByText(/Enabling will download the sign-in module/)).toBeInTheDocument();
-    expect(screen.queryByText('Sign in')).toBeNull();
-  });
-
-  it('toggle ON + signed OUT: shows the sign-in CTA', async () => {
-    usePyxie.setState((s) => ({ settings: { ...s.settings, familyFeaturesEnabled: true } }));
+  it('signed OUT: shows the sign-in CTA', async () => {
     setClerk({ signedIn: false });
     render(<FamilySection />);
     await waitFor(() => expect(screen.getByText('Sign in')).toBeInTheDocument());
     expect(screen.getByText(/Sign in to use family/)).toBeInTheDocument();
   });
 
-  it('toggle ON + signed IN + no family: shows Create + Join forms', async () => {
-    usePyxie.setState((s) => ({ settings: { ...s.settings, familyFeaturesEnabled: true } }));
+  it('signed IN + no family: shows Create + Join forms', async () => {
     setClerk({ signedIn: true });
-    // fetchMyFamily returns 404 / no family.
-    globalThis.fetch = vi.fn(async () => jsonResponse(404, { error: 'no_family' })) as unknown as typeof fetch;
+    // SignedInPanel reads membership from the store cache, populated by
+    // useFamilyMembershipProbe at App mount. In an isolated render we seed
+    // it directly so the panel skips the loading state.
+    usePyxie.getState().setFamilyPayload(null);
 
     render(<FamilySection />);
     await waitFor(() => expect(screen.getByText('Create')).toBeInTheDocument());
@@ -85,11 +82,10 @@ describe('FamilySection transitions', () => {
     expect(screen.getByPlaceholderText('ABCDEF')).toBeInTheDocument();
   });
 
-  it('toggle ON + signed IN + in family: shows member list and Leave button', async () => {
-    usePyxie.setState((s) => ({ settings: { ...s.settings, familyFeaturesEnabled: true } }));
+  it('signed IN + in family: shows member list and Leave button', async () => {
     setClerk({ signedIn: true, userId: 'user_1' });
 
-    const familyPayload = {
+    usePyxie.getState().setFamilyPayload({
       id: 'fam_1',
       name: 'Trans Clan',
       invite_code: 'ABC123',
@@ -97,8 +93,7 @@ describe('FamilySection transitions', () => {
         { user_id: 'user_1', display_name: 'Ada', joined_at: 'a' },
         { user_id: 'user_2', display_name: 'Lin', joined_at: 'b' },
       ],
-    };
-    globalThis.fetch = vi.fn(async () => jsonResponse(200, familyPayload)) as unknown as typeof fetch;
+    });
 
     render(<FamilySection />);
     await waitFor(() => expect(screen.getByText('Trans Clan')).toBeInTheDocument());
@@ -106,17 +101,15 @@ describe('FamilySection transitions', () => {
     expect(screen.getByText('Leave family')).toBeInTheDocument();
     expect(screen.getByText('Ada (you)')).toBeInTheDocument();
     expect(screen.getByText('Lin')).toBeInTheDocument();
-    // No create/join forms.
     expect(screen.queryByPlaceholderText('Family name')).toBeNull();
   });
 
   it('singular "1 member" copy when family has exactly one member', async () => {
-    usePyxie.setState((s) => ({ settings: { ...s.settings, familyFeaturesEnabled: true } }));
     setClerk({ signedIn: true, userId: 'user_1' });
-    globalThis.fetch = vi.fn(async () => jsonResponse(200, {
+    usePyxie.getState().setFamilyPayload({
       id: 'fam_1', name: 'Solo', invite_code: 'ABC123',
       members: [{ user_id: 'user_1', display_name: 'Ada', joined_at: 'a' }],
-    })) as unknown as typeof fetch;
+    });
 
     render(<FamilySection />);
     await waitFor(() => expect(screen.getByText('Solo')).toBeInTheDocument());
@@ -124,9 +117,9 @@ describe('FamilySection transitions', () => {
   });
 
   it('clicking the Sign in CTA invokes window.Clerk.openSignIn', async () => {
-    usePyxie.setState((s) => ({ settings: { ...s.settings, familyFeaturesEnabled: true } }));
     const openSignIn = vi.fn();
     (window as unknown as { Clerk?: unknown }).Clerk = {
+      loaded: true,
       user: null,
       session: null,
       openSignIn,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { usePyxie, flushPersist } from '../../store/usePyxie';
+import { usePyxie } from '../../store/usePyxie';
 import { loadClerk, getClerkUserId } from '../../lib/auth';
 import {
   createFamily,
@@ -7,30 +7,40 @@ import {
   joinFamily,
   leaveFamily,
   rotateInviteCode,
+  syncMe,
   FamilyApiError,
   type FamilyPayload,
 } from '../../lib/familyApi';
 
-// ADR-0007: the single entry point for family lifecycle (sign-in, create,
-// join, view, leave, rotate). Hidden behind the `familyFeaturesEnabled`
-// toggle so solo users never see Clerk, never hit /api, never pay the
-// bundle cost on first paint.
+// Single entry point for family lifecycle (sign-in, create, join, view,
+// leave, rotate). ClerkProvider is always mounted from main.tsx, so this
+// section just routes between SignInGate / SignedInPanel based on auth
+// state — no toggle, no remount dance.
 
 interface ClerkUserState {
   isSignedIn: boolean;
   loading: boolean;
+  failed: boolean;
 }
 
+// How long to wait for clerk-js to flip Clerk.loaded === true before giving
+// up and surfacing a diagnostic. Seen on Fire tablets / restricted networks
+// where the clerk-js chunk parses but Clerk.load() stalls indefinitely on
+// blocked /v1/client requests. Without this, useClerkSignedIn polls forever
+// and the Sign-in button never renders.
+const CLERK_LOAD_TIMEOUT_MS = 10_000;
+
 function useClerkSignedIn(active: boolean): ClerkUserState {
-  const [state, setState] = useState<ClerkUserState>({ isSignedIn: false, loading: active });
+  const [state, setState] = useState<ClerkUserState>({ isSignedIn: false, loading: active, failed: false });
   useEffect(() => {
     if (!active) {
-      setState({ isSignedIn: false, loading: false });
+      setState({ isSignedIn: false, loading: false, failed: false });
       return;
     }
     let cancelled = false;
     let unsubscribe: (() => void) | undefined;
     let pollId: ReturnType<typeof setInterval> | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     void loadClerk()
       .then(() => {
         if (cancelled) return;
@@ -43,13 +53,8 @@ function useClerkSignedIn(active: boolean): ClerkUserState {
           };
         };
         const read = () => {
-          setState({ isSignedIn: !!w.Clerk?.user && !!w.Clerk?.session, loading: false });
+          setState({ isSignedIn: !!w.Clerk?.user && !!w.Clerk?.session, loading: false, failed: false });
         };
-        // loadClerk() resolves the @clerk/clerk-react module, but clerk-js
-        // initializes asynchronously inside ClerkProvider. Reading user/
-        // session before Clerk.loaded is true returns null even for signed-
-        // in users — that was the "have to toggle off/on to see I'm signed
-        // in" bug. Poll until loaded, then read once and subscribe.
         const attach = (): boolean => {
           if (cancelled) return true;
           if (!w.Clerk || w.Clerk.loaded !== true) return false;
@@ -61,12 +66,18 @@ function useClerkSignedIn(active: boolean): ClerkUserState {
         };
         if (!attach()) {
           pollId = setInterval(() => { if (attach()) clearInterval(pollId); }, 100);
+          timeoutId = setTimeout(() => {
+            if (cancelled) return;
+            if (pollId) clearInterval(pollId);
+            setState({ isSignedIn: false, loading: false, failed: true });
+          }, CLERK_LOAD_TIMEOUT_MS);
         }
       })
-      .catch(() => { if (!cancelled) setState({ isSignedIn: false, loading: false }); });
+      .catch(() => { if (!cancelled) setState({ isSignedIn: false, loading: false, failed: true }); });
     return () => {
       cancelled = true;
       if (pollId) clearInterval(pollId);
+      if (timeoutId) clearTimeout(timeoutId);
       unsubscribe?.();
     };
   }, [active]);
@@ -235,34 +246,78 @@ function CreateOrJoin({ onChanged }: { onChanged: () => void }) {
   );
 }
 
-function SignedInPanel() {
-  const [family, setFamily] = useState<FamilyPayload | null>(null);
-  const [loading, setLoading] = useState(true);
-  const setInFamily = usePyxie((s) => s.setInFamily);
+// Module-scope so syncMe fires exactly once per page load. The server upsert
+// is idempotent but the call itself isn't free, and Settings remounts on
+// every tab visit.
+let syncMeFiredThisSession = false;
 
+function SignedInPanel() {
+  const family = usePyxie((s) => s.familyPayload);
+  const hydrated = usePyxie((s) => s.familyHydrated);
+  const setFamilyPayload = usePyxie((s) => s.setFamilyPayload);
+
+  // Push the user's first name from Clerk to the server once per session so
+  // the constellation shows "Jonny" instead of the email-local-part fallback
+  // or the literal "Friend". Idempotent server-side — the gate just spares
+  // the network call on every Settings revisit.
+  useEffect(() => {
+    if (syncMeFiredThisSession) return;
+    const w = window as unknown as {
+      Clerk?: { user?: { firstName?: string | null; fullName?: string | null; username?: string | null } };
+    };
+    const u = w.Clerk?.user;
+    const name = (u?.firstName || u?.fullName || u?.username || '').trim();
+    if (name.length > 0) {
+      syncMeFiredThisSession = true;
+      void syncMe(name).catch(() => { syncMeFiredThisSession = false; });
+    }
+  }, []);
+
+  // Refetch is only triggered by mutations (create/join/leave/rotate), never
+  // by mounting. The initial hydrate happens once per session in
+  // useFamilyMembershipProbe, so navigating to Settings does no API calls.
   const refresh = useCallback(async () => {
-    setLoading(true);
     try {
       const result = await fetchMyFamily();
-      setFamily(result);
-      setInFamily(!!result);
+      setFamilyPayload(result);
     } catch {
-      setFamily(null);
-      setInFamily(false);
-    } finally { setLoading(false); }
-  }, [setInFamily]);
+      setFamilyPayload(null);
+    }
+  }, [setFamilyPayload]);
 
-  useEffect(() => { void refresh(); }, [refresh]);
-
-  // Caller's clerk id via the shared helper (Chaos M7 — replaces a fragile
-  // inline IIFE that read window.Clerk directly).
   const callerId = getClerkUserId();
 
-  if (loading) return <div className="row-sub" style={{ padding: '8px 0' }}>Loading…</div>;
+  if (!hydrated) return <div className="row-sub" style={{ padding: '8px 0' }}>Loading…</div>;
   if (family) {
     return <FamilyMembershipView family={family} callerId={callerId} onChanged={() => { void refresh(); }} />;
   }
   return <CreateOrJoin onChanged={() => { void refresh(); }} />;
+}
+
+// Test-only helper so unit suites can reset the session-once syncMe flag
+// between cases. Intentionally not part of the public API surface.
+export function __resetFamilySectionSessionFlagsForTests(): void {
+  syncMeFiredThisSession = false;
+}
+
+function ClerkLoadFailed() {
+  // Surfaced when clerk-js never reports loaded within CLERK_LOAD_TIMEOUT_MS,
+  // or the dynamic import rejected outright. Common on Fire tablets / Kids
+  // profiles where requests to clerk.* are blocked, and on stale system
+  // clocks that fail TLS. Giving the user a retry beats a silent spinner.
+  const onRetry = () => { window.location.reload(); };
+  return (
+    <div className="row">
+      <div>
+        <div className="row-label">Sign-in unavailable</div>
+        <div className="row-sub">
+          Couldn't reach the sign-in service. Check your connection, system date,
+          and that this profile isn't restricted (Amazon Kids / FreeTime blocks it).
+        </div>
+      </div>
+      <button className="btn" onClick={onRetry}>Retry</button>
+    </div>
+  );
 }
 
 function SignInGate() {
@@ -296,58 +351,20 @@ function SignInGate() {
 }
 
 export function FamilySection() {
-  const enabled = usePyxie((s) => s.settings.familyFeaturesEnabled);
-  const toggleFamilyFeatures = usePyxie((s) => s.toggleFamilyFeatures);
-  const { isSignedIn, loading } = useClerkSignedIn(enabled);
-  const [reloading, setReloading] = useState(false);
-
-  // Toggling family on/off changes whether ClerkProvider wraps the app
-  // tree. Doing that live causes App to remount mid-session, which races
-  // with persistence and Clerk auth state. Instead we flush the new
-  // setting to storage and trigger a full reload so main.tsx reads the
-  // new value at module load and mounts the correct tree exactly once.
-  const onToggle = useCallback(() => {
-    if (reloading) return;
-    toggleFamilyFeatures();
-    flushPersist();
-    setReloading(true);
-    // Tiny delay so the toggle visual flips before the reload, making the
-    // action feel responsive instead of mysterious.
-    setTimeout(() => { window.location.reload(); }, 120);
-  }, [reloading, toggleFamilyFeatures]);
-
-  if (!enabled) {
-    return (
-      <div className="family-section">
-        <div className="row">
-          <div>
-            <div className="row-label">Family features</div>
-            <div className="row-sub">Show your pyxie alongside the rest of your household.</div>
-          </div>
-          <div className={`toggle${reloading ? ' on' : ''}`} onClick={onToggle}></div>
-        </div>
-        <div className="row-sub" style={{ padding: '6px 0 14px' }}>
-          {reloading
-            ? 'Setting up family features…'
-            : 'Enabling will download the sign-in module and refresh the app. You stay anonymous to other families.'}
-        </div>
-      </div>
-    );
-  }
+  const { isSignedIn, loading, failed } = useClerkSignedIn(true);
 
   return (
     <div className="family-section">
       <div className="row">
         <div>
-          <div className="row-label">Family features</div>
-          <div className="row-sub">{reloading ? 'Turning off…' : 'Enabled'}</div>
+          <div className="row-label">Family</div>
+          <div className="row-sub">Show your pyxie alongside the rest of your household.</div>
         </div>
-        <div className={`toggle${reloading ? '' : ' on'}`} onClick={onToggle}></div>
       </div>
-      {reloading ? (
-        <div className="row-sub" style={{ padding: '8px 0' }}>Refreshing…</div>
-      ) : loading ? (
+      {loading ? (
         <div className="row-sub" style={{ padding: '8px 0' }}>Loading sign-in…</div>
+      ) : failed ? (
+        <ClerkLoadFailed />
       ) : isSignedIn ? <SignedInPanel /> : <SignInGate />}
     </div>
   );

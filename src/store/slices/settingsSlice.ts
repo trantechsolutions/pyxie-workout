@@ -10,7 +10,6 @@ export interface SettingsSlice {
   toggleAlarm: () => void;
   toggleSound: () => void;
   toggleExerciseGuide: () => void;
-  toggleFamilyFeatures: () => void;
   setAlarmTime: (h: number, m: number) => void;
   fireAlarm: (key?: string) => void;
 }
@@ -21,13 +20,6 @@ export const createSettingsSlice: PyxieSlice<SettingsSlice> = (set, get) => ({
   toggleAlarm: () => set((s) => ({ settings: { ...s.settings, alarmEnabled: !s.settings.alarmEnabled } })),
   toggleSound: () => set((s) => ({ settings: { ...s.settings, soundOn: !s.settings.soundOn } })),
   toggleExerciseGuide: () => set((s) => ({ settings: { ...s.settings, showExerciseGuide: !s.settings.showExerciseGuide } })),
-  toggleFamilyFeatures: () => set((s) => ({
-    settings: { ...s.settings, familyFeaturesEnabled: !s.settings.familyFeaturesEnabled },
-    // Snap back to a safe tab if we just disabled while sitting on the family pane.
-    ui: s.ui.tab === 'family' && s.settings.familyFeaturesEnabled
-      ? { ...s.ui, tab: 'pet' }
-      : s.ui,
-  })),
   setAlarmTime: (h, m) => {
     const clamped = clampAlarm(h, m);
     if (!clamped) return;

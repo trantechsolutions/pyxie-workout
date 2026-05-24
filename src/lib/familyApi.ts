@@ -63,6 +63,37 @@ async function parseError(res: Response): Promise<never> {
   throw new FamilyApiError(message, res.status, retryAfterMs);
 }
 
+// Sync the user's display name from Clerk to the server. Called once per
+// sign-in so the constellation shows "Jonny" instead of the email-local-part
+// fallback or "Friend".
+export async function syncMe(displayName: string): Promise<void> {
+  const headers = await authHeaders();
+  await fetch('/api/me', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ display_name: displayName }),
+  });
+}
+
+// Push the user's current pet visual state so other family members can render
+// it in the constellation. Egg state is encoded as `lineage_id = ''` (matches
+// the local convention in petSlice). Called whenever the pet visually changes.
+export interface PetSnapshotPayload {
+  line: string;
+  stage: number;
+  lineage_id: string;
+  sprite_state: Record<string, unknown>;
+}
+
+export async function syncPetSnapshot(snap: PetSnapshotPayload): Promise<void> {
+  const headers = await authHeaders();
+  await fetch('/api/pet-snapshot', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(snap),
+  });
+}
+
 export async function fetchMyFamily(): Promise<FamilyPayload | null> {
   const headers = await authHeaders();
   const res = await fetch('/api/families/mine', { headers });

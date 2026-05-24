@@ -906,56 +906,99 @@
     margin-bottom: 10px;
     font-size: 0.85rem;
   }
+  /* Constellation pane — ported from constellation.pen. Deep navy backdrop
+     with a starfield + elliptical orbit ring drawn in the inner SVG. */
   .family-constellation {
     margin: 16px auto;
-    background:
-      radial-gradient(circle at center, rgba(125,249,255,0.06) 0%, transparent 60%),
-      var(--bg-screen);
-    border: 1px solid var(--border);
-    border-radius: 50%;
+    background: #0D1B4B;
+    border-radius: 14px;
+    overflow: hidden;
   }
-  .family-campfire {
+  .family-constellation-bg {
     position: absolute;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--gold) 0%, rgba(255,127,80,0.6) 60%, transparent 100%);
-    box-shadow: 0 0 18px rgba(255,216,102,0.6);
-    animation: family-spark 2.4s ease-in-out infinite;
-  }
-  @keyframes family-spark {
-    0%, 100% { transform: scale(1); opacity: 0.95; }
-    50%      { transform: scale(1.08); opacity: 1; }
+    inset: 0;
+    pointer-events: none;
   }
   .family-pyxie-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 56px;
+    width: 60px;          /* matches SLOT_BOX in Family.tsx */
   }
-  .family-pyxie { position: relative; transition: transform 0.6s ease-out; }
-  /* ADR-0007 Milestone 6: "welcome back" wake animation. Scale + bounce.
-     Lasts ~2s; matches the celebration window in useReturningCelebration. */
-  .family-pyxie--celebrating { animation: family-wake 2s ease-out 1; }
-  .family-pyxie--tilted { /* transform applied inline */ }
+  /* A single slot — halo + ring + box stacked. The box holds the sprite. */
+  .family-slot {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    transition: transform 0.6s ease-out;
+  }
+  .family-slot-halo {
+    position: absolute;
+    width: 96px; height: 96px;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: rgba(123,104,238,0.22);
+    filter: blur(14px);
+    pointer-events: none;
+  }
+  .family-slot-ring {
+    position: absolute;
+    width: 76px; height: 76px;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid rgba(123,104,238,0.55);
+    pointer-events: none;
+  }
+  .family-slot-box {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: #1A2562;
+    border: 3px solid #7B68EE;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Status-driven chrome tweaks. Active glows brighter; drifting cools the
+     halo; sleeping dims it and uses a softer blue ring. */
+  .family-slot--active .family-slot-halo {
+    background: rgba(255,213,79,0.20);
+  }
+  .family-slot--active .family-slot-ring {
+    border-color: rgba(255,213,79,0.55);
+  }
+  .family-slot--active .family-slot-box {
+    border-color: #FFD54F;
+  }
+  .family-slot--drifting .family-slot-halo {
+    background: rgba(123,104,238,0.12);
+  }
+  .family-slot--sleeping .family-slot-halo {
+    background: rgba(79,195,247,0.12);
+  }
+  .family-slot--sleeping .family-slot-ring {
+    border-color: rgba(79,195,247,0.45);
+  }
+  .family-slot--sleeping .family-slot-box {
+    border-color: #4FC3F7;
+    opacity: 0.92;
+  }
+  /* Milestone 6: "welcome back" wake animation. */
+  .family-slot--celebrating { animation: family-wake 2s ease-out 1; }
   @keyframes family-wake {
     0%   { transform: scale(0.85) translateY(0); }
     25%  { transform: scale(1.06) translateY(-6px); }
     55%  { transform: scale(0.98) translateY(0); }
     100% { transform: scale(1) translateY(0); }
   }
+  .family-slot--active { animation: family-float 3s ease-in-out infinite; }
   .family-celebration-sparkles {
     position: absolute; inset: -10px; pointer-events: none;
   }
-  .family-celebration-sparkles .family-sparkle {
-    animation-duration: 1.2s;
-  }
-  .family-pyxie--active { animation: family-float 3s ease-in-out infinite; }
-  .family-pyxie--drifting { }
-  .family-pyxie--sleeping {
-    transform: scale(0.85);
-    filter: saturate(0.95);
-  }
+  .family-celebration-sparkles .family-sparkle { animation-duration: 1.2s; }
   @keyframes family-float {
     0%, 100% { transform: translateY(0); }
     50%      { transform: translateY(-4px); }
@@ -993,31 +1036,36 @@
   .family-label {
     text-align: center;
     margin-top: 4px;
-    width: 70px;
+    width: 72px;
+    /* Center the label horizontally under the slot (slot is 60px wide,
+       label is 72px wide — pull left 6px to center). */
+    margin-left: -6px;
   }
   .family-name {
-    font-size: 0.7rem;
-    color: var(--text);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #FFFFFF;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     /* Chaos M2: hard upper bound so an un-sanitized server response
        (legacy row, or a future provider whose names slipped through) can't
        blow out the constellation pane layout. */
-    max-width: 70px;
+    max-width: 72px;
   }
   .family-status-pill {
     display: inline-block;
-    font-size: 0.55rem;
-    padding: 1px 6px;
-    border-radius: 8px;
+    font-size: 0.5rem;
+    padding: 1px 7px;
+    border-radius: 9px;
     margin-top: 2px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    font-weight: 700;
   }
-  .family-status-pill--active   { background: rgba(255,216,102,0.15); color: var(--gold); }
-  .family-status-pill--drifting { background: rgba(177,160,216,0.15); color: var(--text-dim); }
-  .family-status-pill--sleeping { background: rgba(125,249,255,0.10); color: var(--cyan); }
+  .family-status-pill--active   { background: rgba(255,213,79,0.16); color: #FFD54F; }
+  .family-status-pill--drifting { background: rgba(123,104,238,0.18); color: #B1A0D8; }
+  .family-status-pill--sleeping { background: #0D3A5E;                color: #4FC3F7; }
   .family-empty,
   .family-quiet {
     text-align: center;

@@ -20,6 +20,8 @@ import { useInstallPromptCapture } from './hooks/useInstallPromptCapture';
 import { useIosInstallNudge } from './hooks/useIosInstallNudge';
 import { useDailyAlarm } from './hooks/useDailyAlarm';
 import { useSyncFlusher } from './hooks/useSyncFlusher';
+import { useSyncPetSnapshot } from './hooks/useSyncPetSnapshot';
+import { useFamilyMembershipProbe } from './hooks/useFamilyMembershipProbe';
 
 function ScreenRouter() {
   const pet = usePyxie((s) => s.pet);
@@ -59,6 +61,8 @@ export function App() {
   useInstallPromptCapture();
   useDailyAlarm();
   useSyncFlusher();
+  useSyncPetSnapshot();
+  useFamilyMembershipProbe();
   const iosNudge = useIosInstallNudge();
 
   return (

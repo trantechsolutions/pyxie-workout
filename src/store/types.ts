@@ -40,9 +40,6 @@ export interface Settings {
   alarmMinute: number;
   soundOn: boolean;
   showExerciseGuide: boolean;
-  // ADR-0007: opt-in flag. When false the app must render exactly as today
-  // — no Clerk fetch, no /api calls, no extra bundle weight on first paint.
-  familyFeaturesEnabled: boolean;
 }
 
 export interface Exercise {

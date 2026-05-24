@@ -44,25 +44,20 @@ describe('Nav component', () => {
   beforeEach(resetStore);
 
   it('disables the Workout button when no pet exists', () => {
-    // Post-fdda2fd: Wiki moved off the tab strip onto its own /wiki page.
-    // The Nav now always renders Pet/Workout/Settings + a Wiki anchor link;
-    // when no pet exists, Workout is rendered but disabled.
     const { container } = render(<Nav />);
     const workoutBtn = screen.getByText('Workout') as HTMLButtonElement;
     expect(workoutBtn).toBeDisabled();
     expect(container.querySelectorAll('.nav-btn').length).toBeGreaterThan(0);
   });
 
-  it('renders all primary tabs (Pet/Workout/Settings) plus a Wiki anchor with the current tab active', () => {
+  it('renders all primary tabs (Pet/Workout/Settings) with the current tab active', () => {
     usePyxie.setState({ pet: makePet() });
     render(<Nav />);
     expect(screen.getByText('Pet')).toBeInTheDocument();
     expect(screen.getByText('Workout')).toBeInTheDocument();
     expect(screen.getByText('Settings')).toBeInTheDocument();
-    // Wiki is an <a href="/wiki">, not a tab button.
-    const wikiLink = screen.getByText('Wiki') as HTMLAnchorElement;
-    expect(wikiLink.tagName).toBe('A');
-    expect(wikiLink.getAttribute('href')).toBe('/wiki');
+    // Wiki is no longer in the nav — it lives in Settings.
+    expect(screen.queryByText('Wiki')).toBeNull();
     expect(screen.getByText('Pet').className).toContain('active');
   });
 
@@ -73,35 +68,14 @@ describe('Nav component', () => {
     expect(usePyxie.getState().ui.tab).toBe('workout');
   });
 
-  it('Wiki link navigates to /wiki (no tab state change)', () => {
-    usePyxie.setState({ pet: makePet() });
-    render(<Nav />);
-    const wikiLink = screen.getByText('Wiki') as HTMLAnchorElement;
-    expect(wikiLink.tagName).toBe('A');
-    expect(wikiLink.getAttribute('href')).toBe('/wiki');
-    // Clicking the anchor should NOT mutate ui.tab — it's a hard nav.
-    fireEvent.click(wikiLink);
-    expect(usePyxie.getState().ui.tab).toBe('pet');
-  });
-
-  it('hides the Family tab when family features are disabled', () => {
-    usePyxie.setState({ pet: makePet() });
+  it('hides the Family tab when user is not in a family', () => {
+    usePyxie.setState({ pet: makePet(), inFamily: false });
     render(<Nav />);
     expect(screen.queryByText('Family')).toBeNull();
   });
 
-  it('hides the Family tab when family features are enabled but user is not in a family', () => {
-    usePyxie.setState({ pet: makePet() });
-    usePyxie.setState((s) => ({ settings: { ...s.settings, familyFeaturesEnabled: true } }));
-    usePyxie.setState({ inFamily: false });
-    render(<Nav />);
-    expect(screen.queryByText('Family')).toBeNull();
-  });
-
-  it('shows the Family tab when family features are enabled AND user is in a family', () => {
-    usePyxie.setState({ pet: makePet() });
-    usePyxie.setState((s) => ({ settings: { ...s.settings, familyFeaturesEnabled: true } }));
-    usePyxie.setState({ inFamily: true });
+  it('shows the Family tab when user is in a family', () => {
+    usePyxie.setState({ pet: makePet(), inFamily: true });
     render(<Nav />);
     expect(screen.getByText('Family')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Family'));

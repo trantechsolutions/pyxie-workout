@@ -1,5 +1,6 @@
 import type { Intensity, Complexity } from '../types';
 import type { PyxieSlice } from './types';
+import type { FamilyPayload } from '../../lib/familyApi';
 
 // ADR-0007: outbound sync queue. Bounded to 100 events; events older than
 // 30 days are never enqueued. Server handles idempotency by UUID, so the
@@ -25,6 +26,14 @@ export interface FamilySyncSlice {
   // family settings flow after a successful create/join/leave.
   inFamily: boolean;
   setInFamily: (value: boolean) => void;
+  // Session-cached /api/families/mine payload. Populated once by
+  // useFamilyMembershipProbe (or by create/join/leave/rotate mutations) so the
+  // Settings → Family panel never refetches just because the user navigated
+  // back to the tab. `familyHydrated` distinguishes "not loaded yet" from
+  // "loaded and confirmed no family".
+  familyPayload: FamilyPayload | null;
+  familyHydrated: boolean;
+  setFamilyPayload: (payload: FamilyPayload | null) => void;
   enqueueWorkoutEvent: (event: WorkoutEvent) => void;
   markEventSynced: (id: string) => void;
   dropOldestIfOverCap: () => void;
@@ -34,6 +43,13 @@ export const createFamilySyncSlice: PyxieSlice<FamilySyncSlice> = (set, get) => 
   eventQueue: [],
   inFamily: false,
   setInFamily: (value) => set({ inFamily: value }),
+  familyPayload: null,
+  familyHydrated: false,
+  setFamilyPayload: (payload) => set({
+    familyPayload: payload,
+    familyHydrated: true,
+    inFamily: !!payload,
+  }),
 
   enqueueWorkoutEvent: (event) => {
     if (Date.now() - event.completed_at > MAX_AGE_MS) {
