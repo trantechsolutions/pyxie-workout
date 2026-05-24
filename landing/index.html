@@ -689,11 +689,14 @@
       }
     })();
 
-    // Waitlist form — front-end stub. Replace action with real endpoint later.
+    // Waitlist form — POSTs to /api/waitlist (Vercel Function → Neon).
     (function() {
       var form   = document.querySelector('.waitlist-form');
       var status = document.getElementById('form-status');
       if (!form || !status) return;
+
+      var submitBtn = form.querySelector('button[type="submit"]');
+      var originalBtnText = submitBtn ? submitBtn.textContent : '';
 
       form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -704,9 +707,36 @@
           status.textContent = 'That email looks off — try one like name@example.com.';
           return;
         }
-        status.setAttribute('data-state', 'ok');
-        status.textContent = "You're in. We'll email you the second the gates open — your egg's already waiting, we just don't know what's inside.";
-        form.reset();
+
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Claiming…'; }
+
+        fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, source: 'landing' })
+        }).then(function(r) {
+          return r.json().then(function(j) { return { ok: r.ok, body: j }; });
+        }).then(function(res) {
+          if (!res.ok) {
+            status.setAttribute('data-state', 'error');
+            if (res.body && res.body.error === 'rate_limited') {
+              status.textContent = 'Slow down a touch — try again in a minute.';
+            } else if (res.body && res.body.error === 'invalid_email') {
+              status.textContent = 'That email looks off — try one like name@example.com.';
+            } else {
+              status.textContent = "Something glitched on our end. Try again in a moment.";
+            }
+            return;
+          }
+          status.setAttribute('data-state', 'ok');
+          status.textContent = "You're in. We'll email you the second the gates open — your egg's already waiting, we just don't know what's inside.";
+          form.reset();
+        }).catch(function() {
+          status.setAttribute('data-state', 'error');
+          status.textContent = "Couldn't reach the server. Check your connection and try again.";
+        }).finally(function() {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalBtnText; }
+        });
       });
     })();
   </script>

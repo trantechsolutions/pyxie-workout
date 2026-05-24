@@ -10,7 +10,24 @@ main app). Point the marketing domain (e.g. `pyxie.app`) here; keep
 - **Framework Preset:** Other
 - **Build Command:** (leave empty)
 - **Output Directory:** `.` (or leave empty)
-- **Install Command:** (leave empty)
+- **Install Command:** default (`npm install` — needed for the waitlist function's deps)
+
+## Environment variables
+
+- `DATABASE_URL` — Neon connection string. Reuse the same one the main app
+  uses (Vercel → main app project → Settings → Environment Variables → copy
+  the value, paste into this project under Production + Preview).
+
+## Database
+
+Before the first deploy, run `migrations/001_waitlist_emails.sql` against
+the Neon database. Easiest: open the Neon SQL editor and paste it in.
+
+Captured emails land in `waitlist_emails`. To export:
+
+```sql
+SELECT email, source, created_at FROM waitlist_emails ORDER BY created_at;
+```
 
 ## Source of truth
 

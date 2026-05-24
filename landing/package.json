@@ -1,0 +1,11 @@
+{
+  "name": "pyxie-landing",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.1.0"
+  }
+}
