@@ -4,6 +4,11 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "cleanUrls": true,
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "nodejs22.x"
+    }
+  },
   "headers": [
     {
       "source": "/manifest.webmanifest",

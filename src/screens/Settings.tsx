@@ -1,9 +1,16 @@
+import { lazy, Suspense } from 'react';
 import { AlarmSection } from './settings/AlarmSection';
 import { SoundSection } from './settings/SoundSection';
 import { CoachingSection } from './settings/CoachingSection';
 import { HistorySection } from './settings/HistorySection';
 import { InstallSection } from './settings/InstallSection';
 import { ResetSection } from './settings/ResetSection';
+
+// ADR-0007: family section lazy-loaded so the family API client and the
+// Clerk loader path don't enter the solo bundle.
+const FamilySection = lazy(() =>
+  import('./settings/FamilySection').then((m) => ({ default: m.FamilySection })),
+);
 
 export function Settings() {
   return (
@@ -13,6 +20,9 @@ export function Settings() {
       <AlarmSection />
       <SoundSection />
       <CoachingSection />
+      <Suspense fallback={<div className="row-sub" style={{ padding: '8px 0' }}>Loading family options…</div>}>
+        <FamilySection />
+      </Suspense>
       <HistorySection />
       <InstallSection />
       <ResetSection />

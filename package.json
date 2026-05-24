@@ -15,6 +15,9 @@
     "verify:sprites": "npm run export:sprites && git diff --exit-code docs/wiki/sprites/"
   },
   "dependencies": {
+    "@clerk/backend": "^1.21.0",
+    "@clerk/clerk-react": "^5.20.0",
+    "@neondatabase/serverless": "^0.10.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
@@ -23,6 +26,7 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
+    "@vercel/node": "^5.1.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.9.1",
     "@types/react": "^18.3.12",

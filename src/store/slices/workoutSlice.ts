@@ -167,6 +167,20 @@ export const createWorkoutSlice: PyxieSlice<WorkoutSlice> = (set, get) => ({
         evolved: result.evolved,
         ui: { ...s.ui, workoutActive: null, previewList: null, tab: 'pet' },
       }));
+      // ADR-0007: also enqueue an event for the family-sync flusher. Solo users
+      // queue harmlessly until they sign in; the flusher no-ops without a session.
+      try {
+        get().enqueueWorkoutEvent({
+          id: crypto.randomUUID(),
+          completed_at: result.pet.lastWorkout ?? Date.now(),
+          intensity: w.intensity,
+          complexity: w.complexity,
+          xp_gained: result.xpGained,
+        });
+      } catch {
+        // crypto.randomUUID is in the project's target runtimes; swallow to keep
+        // finishWorkout robust against any exotic environments.
+      }
     } else {
       set((s) => ({ ui: { ...s.ui, workoutActive: null, previewList: null, tab: 'pet' } }));
     }

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { usePyxie } from './store/usePyxie';
 import { Hud } from './components/Hud';
 import { Nav } from './components/Nav';
@@ -10,11 +10,16 @@ import { WorkoutTimer } from './screens/WorkoutTimer';
 import { Settings } from './screens/Settings';
 import { Dead } from './screens/Dead';
 
+// ADR-0007: Family screen and its hooks live in a separate chunk so solo
+// users never download the constellation code on first paint.
+const Family = lazy(() => import('./screens/Family').then((m) => ({ default: m.Family })));
+
 import { usePersistenceLifecycle } from './hooks/usePersistenceLifecycle';
 import { useDecayLoop } from './hooks/useDecayLoop';
 import { useInstallPromptCapture } from './hooks/useInstallPromptCapture';
 import { useIosInstallNudge } from './hooks/useIosInstallNudge';
 import { useDailyAlarm } from './hooks/useDailyAlarm';
+import { useSyncFlusher } from './hooks/useSyncFlusher';
 
 function ScreenRouter() {
   const pet = usePyxie((s) => s.pet);
@@ -24,6 +29,13 @@ function ScreenRouter() {
   if (pet && !pet.alive) return <Dead />;
   if (pet && workoutActive) return <WorkoutTimer />;
   if (tab === 'settings') return <Settings />;
+  if (tab === 'family') {
+    return (
+      <Suspense fallback={<div className="panel-sub">Loading…</div>}>
+        <Family />
+      </Suspense>
+    );
+  }
   if (pet && tab === 'workout') return <Workout />;
   return <Pet />;
 }
@@ -36,6 +48,7 @@ export function App() {
   useDecayLoop();
   useInstallPromptCapture();
   useDailyAlarm();
+  useSyncFlusher();
   const iosNudge = useIosInstallNudge();
 
   return (

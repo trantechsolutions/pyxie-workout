@@ -7,6 +7,7 @@ import { createSettingsSlice, type SettingsSlice } from './slices/settingsSlice'
 import { createInstallSlice, type InstallSlice } from './slices/installSlice';
 import { createUISlice, type UISlice } from './slices/uiSlice';
 import { createPersistenceSlice, type PersistenceSlice } from './slices/persistenceSlice';
+import { createFamilySyncSlice, type FamilySyncSlice } from './slices/familySyncSlice';
 
 export type PyxieStore =
   & PetSlice
@@ -14,7 +15,8 @@ export type PyxieStore =
   & SettingsSlice
   & InstallSlice
   & UISlice
-  & PersistenceSlice;
+  & PersistenceSlice
+  & FamilySyncSlice;
 
 export const usePyxie = create<PyxieStore>((...a) => ({
   ...createPetSlice(...a),
@@ -23,13 +25,14 @@ export const usePyxie = create<PyxieStore>((...a) => ({
   ...createInstallSlice(...a),
   ...createUISlice(...a),
   ...createPersistenceSlice(...a),
+  ...createFamilySyncSlice(...a),
 }));
 
 // Auto-persist: subscribe to state changes and flush the persisted slice on
 // any change. Trailing-edge debounce keeps high-frequency mutators (e.g. the
 // 1Hz workout tick) from paying a localStorage write per change.
 const PERSISTED_KEYS: ReadonlyArray<keyof PyxieStore> = [
-  'pet', 'settings', 'history', 'installNudgeDismissed',
+  'pet', 'settings', 'history', 'installNudgeDismissed', 'eventQueue',
 ];
 const PERSIST_DEBOUNCE_MS = 250;
 let lastSnapshot: string | null = null;
