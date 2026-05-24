@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { neon } from '@neondatabase/serverless';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MAX_EMAIL_LEN = 254;
@@ -54,6 +53,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ ok: false, error: 'database_unconfigured' });
   }
 
+  let neon: typeof import('@neondatabase/serverless').neon;
+  try {
+    ({ neon } = await import('@neondatabase/serverless'));
+  } catch (err) {
+    console.error('[waitlist] neon module load failed — is @neondatabase/serverless installed?', err);
+    return res.status(500).json({ ok: false, error: 'driver_unavailable' });
+  }
+
   try {
     const sql = neon(process.env.DATABASE_URL);
     await sql`
@@ -63,8 +70,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     `;
     return res.status(200).json({ ok: true });
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
     console.error('[waitlist] insert failed', err);
-    return res.status(500).json({ ok: false, error: 'insert_failed' });
+    // Surface DB error class so we can tell "table missing" vs "auth failed"
+    // vs "network" from the client response without leaking the full message.
+    let kind: 'table_missing' | 'auth' | 'connection' | 'insert_failed' = 'insert_failed';
+    if (/relation .* does not exist/i.test(msg)) kind = 'table_missing';
+    else if (/password authentication|role .* does not exist|permission denied/i.test(msg)) kind = 'auth';
+    else if (/ENOTFOUND|ECONNREFUSED|getaddrinfo|TLS/i.test(msg)) kind = 'connection';
+    return res.status(500).json({ ok: false, error: kind });
   }
 }
 
