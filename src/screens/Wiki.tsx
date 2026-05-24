@@ -8,6 +8,18 @@ function stripMermaidFences(src: string): string {
   return src.replace(/```mermaid[\s\S]*?```/g, '> *Diagram — view the rendered flowchart on GitHub.*');
 }
 
+// react-markdown does not render raw HTML. The wiki source uses <details>/<summary>
+// for collapsible sections on GitHub; convert those to markdown headings so they
+// render as plain visible sections instead of literal "<details>" text.
+function flattenDetails(src: string): string {
+  return src
+    .replace(/<summary>([\s\S]*?)<\/summary>/g, (_, inner) => {
+      const text = inner.replace(/<\/?b>/g, '').replace(/\s+/g, ' ').trim();
+      return `\n#### ${text}\n`;
+    })
+    .replace(/<\/?details>/g, '');
+}
+
 interface Article {
   title: string;
   slug: string;
@@ -31,7 +43,7 @@ function firstParagraph(body: string): string {
 }
 
 function parseArticles(src: string): { intro: string; articles: Article[] } {
-  const stripped = stripMermaidFences(src);
+  const stripped = flattenDetails(stripMermaidFences(src));
   const parts = stripped.split(/(?=^## )/m);
   const intro = parts[0].trim();
   const articles = parts.slice(1).map((body) => {
