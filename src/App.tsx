@@ -40,9 +40,19 @@ function ScreenRouter() {
   return <Pet />;
 }
 
+// Module-scope guard: persistence must hydrate exactly once per page load.
+// Defensive — main.tsx no longer swaps the Root tree mid-session (family
+// toggles reload the page instead), but if a future change reintroduces a
+// remount, re-hydrating would clobber unflushed in-memory state.
+let hasHydrated = false;
+
 export function App() {
   const hydrate = usePyxie((s) => s.hydrate);
-  useEffect(() => { hydrate(); }, [hydrate]);
+  useEffect(() => {
+    if (hasHydrated) return;
+    hasHydrated = true;
+    hydrate();
+  }, [hydrate]);
 
   usePersistenceLifecycle();
   useDecayLoop();

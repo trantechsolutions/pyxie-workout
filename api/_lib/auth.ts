@@ -1,5 +1,6 @@
 import { verifyToken } from '@clerk/backend';
 import type { VercelRequest } from '@vercel/node';
+import { getSql } from './db.js';
 
 export class AuthError extends Error {
   status: number;
@@ -56,6 +57,26 @@ export async function requireUser(req: VercelRequest): Promise<AuthedUser> {
   const userId = payload.sub;
   if (!userId) {
     throw new AuthError('Invalid session token');
+  }
+
+  // Guarantee a users row exists before any handler references it via FK.
+  // INSERT ... ON CONFLICT DO NOTHING is a no-op on re-entry, so this is
+  // safe to run on every authenticated request. /api/me still handles the
+  // richer display_name derivation when the client explicitly hits it.
+  try {
+    const sql = getSql();
+    const fallback = payload.email?.split('@')[0]?.slice(0, 32) || 'Friend';
+    await sql`
+      INSERT INTO users (id, display_name)
+      VALUES (${userId}, ${fallback})
+      ON CONFLICT (id) DO NOTHING
+    `;
+  } catch (err) {
+    // Don't fail the request on a transient users-row insert — the handler
+    // will hit its own FK violation if the row truly cannot be created,
+    // which is the right place to surface the error.
+    // eslint-disable-next-line no-console
+    console.warn('[auth] ensureUserRow failed', err);
   }
 
   return { userId, email: payload.email };

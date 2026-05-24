@@ -11,7 +11,7 @@ vi.mock('../../api/_lib/db', () => ({
 }));
 
 import { verifyToken } from '@clerk/backend';
-import createHandler from '../../api/families/index';
+import createHandler from '../../api/families/create';
 import mineHandler from '../../api/families/mine';
 import joinHandler from '../../api/families/join';
 import membershipHandler from '../../api/families/membership';

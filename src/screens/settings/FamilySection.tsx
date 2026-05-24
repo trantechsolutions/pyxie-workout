@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { usePyxie } from '../../store/usePyxie';
+import { usePyxie, flushPersist } from '../../store/usePyxie';
 import { loadClerk, getClerkUserId } from '../../lib/auth';
 import {
   createFamily,
@@ -29,14 +29,46 @@ function useClerkSignedIn(active: boolean): ClerkUserState {
       return;
     }
     let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
+    let pollId: ReturnType<typeof setInterval> | undefined;
     void loadClerk()
       .then(() => {
         if (cancelled) return;
-        const w = window as unknown as { Clerk?: { user?: unknown; session?: unknown } };
-        setState({ isSignedIn: !!w.Clerk?.user && !!w.Clerk?.session, loading: false });
+        const w = window as unknown as {
+          Clerk?: {
+            loaded?: boolean;
+            user?: unknown;
+            session?: unknown;
+            addListener?: (cb: () => void) => () => void;
+          };
+        };
+        const read = () => {
+          setState({ isSignedIn: !!w.Clerk?.user && !!w.Clerk?.session, loading: false });
+        };
+        // loadClerk() resolves the @clerk/clerk-react module, but clerk-js
+        // initializes asynchronously inside ClerkProvider. Reading user/
+        // session before Clerk.loaded is true returns null even for signed-
+        // in users — that was the "have to toggle off/on to see I'm signed
+        // in" bug. Poll until loaded, then read once and subscribe.
+        const attach = (): boolean => {
+          if (cancelled) return true;
+          if (!w.Clerk || w.Clerk.loaded !== true) return false;
+          read();
+          if (typeof w.Clerk.addListener === 'function') {
+            unsubscribe = w.Clerk.addListener(read);
+          }
+          return true;
+        };
+        if (!attach()) {
+          pollId = setInterval(() => { if (attach()) clearInterval(pollId); }, 100);
+        }
       })
       .catch(() => { if (!cancelled) setState({ isSignedIn: false, loading: false }); });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (pollId) clearInterval(pollId);
+      unsubscribe?.();
+    };
   }, [active]);
   return state;
 }
@@ -267,6 +299,22 @@ export function FamilySection() {
   const enabled = usePyxie((s) => s.settings.familyFeaturesEnabled);
   const toggleFamilyFeatures = usePyxie((s) => s.toggleFamilyFeatures);
   const { isSignedIn, loading } = useClerkSignedIn(enabled);
+  const [reloading, setReloading] = useState(false);
+
+  // Toggling family on/off changes whether ClerkProvider wraps the app
+  // tree. Doing that live causes App to remount mid-session, which races
+  // with persistence and Clerk auth state. Instead we flush the new
+  // setting to storage and trigger a full reload so main.tsx reads the
+  // new value at module load and mounts the correct tree exactly once.
+  const onToggle = useCallback(() => {
+    if (reloading) return;
+    toggleFamilyFeatures();
+    flushPersist();
+    setReloading(true);
+    // Tiny delay so the toggle visual flips before the reload, making the
+    // action feel responsive instead of mysterious.
+    setTimeout(() => { window.location.reload(); }, 120);
+  }, [reloading, toggleFamilyFeatures]);
 
   if (!enabled) {
     return (
@@ -276,11 +324,12 @@ export function FamilySection() {
             <div className="row-label">Family features</div>
             <div className="row-sub">Show your pyxie alongside the rest of your household.</div>
           </div>
-          <div className="toggle" onClick={toggleFamilyFeatures}></div>
+          <div className={`toggle${reloading ? ' on' : ''}`} onClick={onToggle}></div>
         </div>
         <div className="row-sub" style={{ padding: '6px 0 14px' }}>
-          Enabling will download the sign-in module the first time you tap it.
-          You stay anonymous to other families.
+          {reloading
+            ? 'Setting up family features…'
+            : 'Enabling will download the sign-in module and refresh the app. You stay anonymous to other families.'}
         </div>
       </div>
     );
@@ -291,11 +340,13 @@ export function FamilySection() {
       <div className="row">
         <div>
           <div className="row-label">Family features</div>
-          <div className="row-sub">Enabled</div>
+          <div className="row-sub">{reloading ? 'Turning off…' : 'Enabled'}</div>
         </div>
-        <div className="toggle on" onClick={toggleFamilyFeatures}></div>
+        <div className={`toggle${reloading ? '' : ' on'}`} onClick={onToggle}></div>
       </div>
-      {loading ? (
+      {reloading ? (
+        <div className="row-sub" style={{ padding: '8px 0' }}>Refreshing…</div>
+      ) : loading ? (
         <div className="row-sub" style={{ padding: '8px 0' }}>Loading sign-in…</div>
       ) : isSignedIn ? <SignedInPanel /> : <SignInGate />}
     </div>

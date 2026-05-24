@@ -73,7 +73,7 @@ export async function fetchMyFamily(): Promise<FamilyPayload | null> {
 
 export async function createFamily(name: string): Promise<FamilyPayload> {
   const headers = await authHeaders();
-  const res = await fetch('/api/families', {
+  const res = await fetch('/api/families/create', {
     method: 'POST',
     headers,
     body: JSON.stringify({ name }),
