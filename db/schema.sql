@@ -72,3 +72,14 @@ CREATE TABLE IF NOT EXISTS pet_snapshots (
   sprite_state  JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Canonical gameplay-state pet store (ADR-009).
+-- Distinct from pet_snapshots (which is a thin projection for the family pane).
+-- The full Pet object is stored as JSONB so the TS type can evolve without DDL.
+CREATE TABLE IF NOT EXISTS pets (
+  user_id     TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  state       JSONB NOT NULL,
+  version     INTEGER NOT NULL DEFAULT 1,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
