@@ -2,6 +2,12 @@ import { useEffect } from 'react';
 import { usePyxie } from '../store/usePyxie';
 import { loadClerk, getClerkSession } from '../lib/auth';
 import type { Pet } from '../store/types';
+import {
+  computePetSignature,
+  setLastSignature,
+  setLastVersion,
+  resetPetSyncState,
+} from '../lib/petSyncState';
 
 // ADR-009 M2: hydrate the canonical pet from the server on Clerk sign-in.
 //
@@ -77,6 +83,11 @@ export async function hydratePetOnce(deps: PetHydrationDeps = {}): Promise<void>
       const body = (await res.json()) as PetGetResponse;
       // Server is authoritative — replace whatever localStorage had.
       replacePet(body.state as Pet);
+      // ADR-009 M3: seed the flusher's sync cursor so the first observed
+      // state change (which is THIS replacePet) is not pushed back to the
+      // server as a redundant PUT.
+      setLastSignature(computePetSignature(body.state));
+      setLastVersion(body.version);
       return;
     }
 
@@ -87,7 +98,7 @@ export async function hydratePetOnce(deps: PetHydrationDeps = {}): Promise<void>
         // OTHER device can fetch it on next sign-in. Keep the local pet — it
         // is now mirrored on the server.
         try {
-          await fetch('/api/pet', {
+          const putRes = await fetch('/api/pet', {
             method: 'PUT',
             headers: {
               authorization: `Bearer ${token}`,
@@ -95,6 +106,18 @@ export async function hydratePetOnce(deps: PetHydrationDeps = {}): Promise<void>
             },
             body: JSON.stringify({ state: localPet }),
           });
+          if (putRes.ok) {
+            // ADR-009 M3: seed flusher cursor so the flusher doesn't
+            // immediately re-PUT the same state we just migrated.
+            setLastSignature(computePetSignature(localPet));
+            try {
+              const body = (await putRes.json()) as PetGetResponse;
+              if (typeof body.version === 'number') setLastVersion(body.version);
+            } catch {
+              // Body not JSON — version stays at default; next successful
+              // flusher PUT will sync up.
+            }
+          }
         } catch (err) {
           // Migration failed — non-fatal. The next mutation in M3 will retry.
           // eslint-disable-next-line no-console
@@ -104,6 +127,9 @@ export async function hydratePetOnce(deps: PetHydrationDeps = {}): Promise<void>
       }
       // Brand-new user, no pet anywhere. Hatch screen will render after gate.
       replacePet(null);
+      // ADR-009 M3: seed signature for null so the flusher doesn't try to
+      // push a null pet when it observes the replacePet(null) transition.
+      setLastSignature(computePetSignature(null));
       return;
     }
 
@@ -134,7 +160,12 @@ export function usePetHydration(): void {
       } else {
         // Signed-out: M2 leaves localStorage alone. Just ensure we're not
         // stuck in `petHydrating === true` if the user never signs in.
-        if (hydratedForUserId !== null) hydratedForUserId = null;
+        if (hydratedForUserId !== null) {
+          hydratedForUserId = null;
+          // ADR-009 M3: clear the flusher cursor so a fresh sign-in doesn't
+          // inherit a previous user's signature/version.
+          resetPetSyncState();
+        }
         const { petHydrating, setPetHydrating } = usePyxie.getState();
         if (petHydrating) setPetHydrating(false);
       }
