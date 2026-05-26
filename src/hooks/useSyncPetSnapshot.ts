@@ -15,8 +15,18 @@ export function useSyncPetSnapshot(): void {
   const pet = usePyxie((s) => s.pet);
   const inFamily = usePyxie((s) => s.inFamily);
   const lastPushedRef = useRef<string | null>(null);
+  const prevInFamilyRef = useRef<boolean>(false);
 
   useEffect(() => {
+    // Defense-in-depth: on every false->true transition, clear the dedupe
+    // signature so the next push always fires. Covers the case where the
+    // previous push silently failed before the inFamily flip and the
+    // signature would otherwise short-circuit the retry.
+    if (inFamily && !prevInFamilyRef.current) {
+      lastPushedRef.current = null;
+    }
+    prevInFamilyRef.current = inFamily;
+
     if (!inFamily || !pet) return;
     const snap: PetSnapshotPayload = {
       line: pet.line,
@@ -30,6 +40,6 @@ export function useSyncPetSnapshot(): void {
     const key = JSON.stringify(snap);
     if (key === lastPushedRef.current) return;
     lastPushedRef.current = key;
-    void syncPetSnapshot(snap).catch(() => { /* non-blocking */ });
+    void syncPetSnapshot(snap).catch((err) => console.warn('[syncPetSnapshot] push failed', err));
   }, [pet, inFamily]);
 }

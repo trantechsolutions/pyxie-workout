@@ -19,6 +19,8 @@ export function useFamilyMembershipProbe(): void {
     let pollId: ReturnType<typeof setInterval> | undefined;
     let unsubscribe: (() => void) | undefined;
     let lastProbedUserId: string | null = null;
+    let lastFailedAt: number | null = null;
+    const FAILURE_RETRY_FLOOR_MS = 2000;
 
     type ClerkLike = {
       loaded?: boolean;
@@ -29,11 +31,19 @@ export function useFamilyMembershipProbe(): void {
 
     const probe = async (userId: string) => {
       if (lastProbedUserId === userId) return;
-      lastProbedUserId = userId;
+      // Backoff: after a failed probe, gate retries for the same userId so a
+      // hard-down server doesn't trigger a hot loop on every Clerk listener tick.
+      if (lastFailedAt !== null && Date.now() - lastFailedAt < FAILURE_RETRY_FLOOR_MS) return;
       try {
         const result = await fetchMyFamily();
+        // Only memoize on success — failed probes must remain retryable so a
+        // transient 401 (e.g. session token not yet issuable) doesn't lock out
+        // subsequent listener ticks for the rest of the session.
+        lastProbedUserId = userId;
+        lastFailedAt = null;
         if (!cancelled) setFamilyPayload(result);
       } catch {
+        lastFailedAt = Date.now();
         if (!cancelled) setFamilyPayload(null);
       }
     };

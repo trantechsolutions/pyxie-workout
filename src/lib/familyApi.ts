@@ -87,11 +87,12 @@ export interface PetSnapshotPayload {
 
 export async function syncPetSnapshot(snap: PetSnapshotPayload): Promise<void> {
   const headers = await authHeaders();
-  await fetch('/api/pet-snapshot', {
+  const res = await fetch('/api/pet-snapshot', {
     method: 'PUT',
     headers,
     body: JSON.stringify(snap),
   });
+  if (!res.ok && res.status !== 204) await parseError(res);
 }
 
 export async function fetchMyFamily(): Promise<FamilyPayload | null> {
