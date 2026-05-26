@@ -1,52 +1,68 @@
 import { describe, it, expect } from 'vitest';
 import { EXERCISES } from '../src/data/exercises';
-import { ANIMATION_REGISTRY } from '../src/components/animations';
-import type { Intensity, Complexity, MovementPattern } from '../src/store/types';
+import { ANIMATION_REGISTRY, getAnimationComponent, PlaceholderAnimation } from '../src/components/animations';
+import type { Intensity, Complexity } from '../src/store/types';
 
 const INTENSITIES: Intensity[] = ['easy', 'medium', 'hard'];
 const COMPLEXITIES: Complexity[] = ['beginner', 'intermediate', 'advanced'];
 
+function allExercises() {
+  const out = [] as { i: Intensity; c: Complexity; name: string; animationId: string; form: string }[];
+  for (const i of INTENSITIES) {
+    for (const c of COMPLEXITIES) {
+      for (const e of EXERCISES[i][c]) {
+        out.push({ i, c, name: e.name, animationId: e.animationId, form: e.form });
+      }
+    }
+  }
+  return out;
+}
+
 describe('exercise guide data integrity', () => {
   it('every exercise has non-empty form text', () => {
-    for (const i of INTENSITIES) {
-      for (const c of COMPLEXITIES) {
-        for (const e of EXERCISES[i][c]) {
-          expect(e.form, `${i}/${c}/${e.name} missing form`).toBeTruthy();
-          expect(e.form.length, `${i}/${c}/${e.name} form too short`).toBeGreaterThan(30);
-        }
-      }
+    for (const e of allExercises()) {
+      expect(e.form, `${e.i}/${e.c}/${e.name} missing form`).toBeTruthy();
+      expect(e.form.length, `${e.i}/${e.c}/${e.name} form too short`).toBeGreaterThan(30);
     }
   });
 
-  it('every exercise has a valid movementPattern mapped to a registered animation', () => {
-    for (const i of INTENSITIES) {
-      for (const c of COMPLEXITIES) {
-        for (const e of EXERCISES[i][c]) {
-          expect(e.movementPattern, `${e.name} missing movementPattern`).toBeTruthy();
-          expect(
-            ANIMATION_REGISTRY[e.movementPattern as MovementPattern],
-            `${e.name} pattern ${e.movementPattern} has no animation component`
-          ).toBeDefined();
-        }
-      }
+  it('every exercise has a non-empty animationId', () => {
+    for (const e of allExercises()) {
+      expect(e.animationId, `${e.name} missing animationId`).toBeTruthy();
+      expect(e.animationId.length, `${e.name} animationId too short`).toBeGreaterThan(0);
     }
   });
 
-  it('every registered animation pattern is used by at least one exercise', () => {
-    const used = new Set<MovementPattern>();
-    for (const i of INTENSITIES) {
-      for (const c of COMPLEXITIES) {
-        for (const e of EXERCISES[i][c]) used.add(e.movementPattern);
-      }
+  it('every animationId is unique across all 90 exercises', () => {
+    const ids = allExercises().map(e => e.animationId);
+    const set = new Set(ids);
+    expect(set.size, `expected 90 unique ids, got ${set.size}`).toBe(ids.length);
+  });
+
+  it('every animationId resolves to a registered component (no placeholder fallback)', () => {
+    for (const e of allExercises()) {
+      const c = getAnimationComponent(e.animationId);
+      expect(c, `${e.name} id ${e.animationId} has no component`).toBeDefined();
+      expect(c, `${e.name} id ${e.animationId} fell back to placeholder`).not.toBe(PlaceholderAnimation);
+      expect(ANIMATION_REGISTRY[e.animationId], `${e.name} not in registry`).toBeDefined();
     }
-    for (const pattern of Object.keys(ANIMATION_REGISTRY) as MovementPattern[]) {
-      expect(used.has(pattern), `pattern ${pattern} has component but no exercises`).toBe(true);
+  });
+
+  it('every registered animation is used by exactly one exercise', () => {
+    const used = new Set<string>();
+    for (const e of allExercises()) used.add(e.animationId);
+    for (const id of Object.keys(ANIMATION_REGISTRY)) {
+      expect(used.has(id), `registry id ${id} has component but no exercise references it`).toBe(true);
     }
+    expect(used.size, 'registry size should equal exercise count').toBe(Object.keys(ANIMATION_REGISTRY).length);
+  });
+
+  it('unknown animationId falls back to placeholder', () => {
+    const c = getAnimationComponent('this-id-does-not-exist');
+    expect(c).toBe(PlaceholderAnimation);
   });
 
   it('total exercises = 90 (3 intensities × 3 complexities × 10)', () => {
-    let total = 0;
-    for (const i of INTENSITIES) for (const c of COMPLEXITIES) total += EXERCISES[i][c].length;
-    expect(total).toBe(90);
+    expect(allExercises().length).toBe(90);
   });
 });

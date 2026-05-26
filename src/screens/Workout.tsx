@@ -42,7 +42,7 @@ export function Workout() {
           <div className="field-label preview-label">Today's set</div>
           {previewList.map((e, i) => {
             if (e.form && settings.showExerciseGuide) {
-              const Anim = getAnimationComponent(e.movementPattern);
+              const Anim = getAnimationComponent(e.animationId);
               return (
                 <details key={i} className="preview-item">
                   <summary><span>{i + 1}. {e.name}</span><span>45s</span></summary>

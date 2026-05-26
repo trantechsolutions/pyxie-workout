@@ -94,7 +94,7 @@ describe('Workout screen', () => {
   it('shows form text as an expandable row when showExerciseGuide is on', () => {
     usePyxie.setState((s) => ({
       settings: { ...s.settings, showExerciseGuide: true },
-      ui: { ...s.ui, previewList: [{ name: 'Bear Crawl', cue: 'Hips low.', form: 'Crawl forward on hands and feet, hips low, knees hovering.', movementPattern: 'plank_dynamic' as const }] },
+      ui: { ...s.ui, previewList: [{ name: 'Bear Crawl', cue: 'Hips low.', form: 'Crawl forward on hands and feet, hips low, knees hovering.', animationId: 'bear-crawl' as const }] },
     }));
     const { container } = render(<Workout />);
     expect(container.querySelector('details.preview-item')).not.toBeNull();
@@ -104,7 +104,7 @@ describe('Workout screen', () => {
   it('hides form text when showExerciseGuide is off', () => {
     usePyxie.setState((s) => ({
       settings: { ...s.settings, showExerciseGuide: false },
-      ui: { ...s.ui, previewList: [{ name: 'Bear Crawl', cue: 'Hips low.', form: 'Crawl forward on hands and feet, hips low, knees hovering.', movementPattern: 'plank_dynamic' as const }] },
+      ui: { ...s.ui, previewList: [{ name: 'Bear Crawl', cue: 'Hips low.', form: 'Crawl forward on hands and feet, hips low, knees hovering.', animationId: 'bear-crawl' as const }] },
     }));
     const { container } = render(<Workout />);
     expect(container.querySelector('details.preview-item')).toBeNull();
@@ -115,8 +115,8 @@ describe('Workout screen', () => {
     usePyxie.setState((s) => ({
       settings: { ...s.settings, showExerciseGuide: true },
       ui: { ...s.ui, previewList: [
-        { name: 'Bear Crawl', cue: 'Hips low.', form: '', movementPattern: 'plank_dynamic' as const },
-        { name: 'Push-ups', cue: 'Chest leads.', form: '', movementPattern: 'push' as const },
+        { name: 'Bear Crawl', cue: 'Hips low.', form: '', animationId: 'bear-crawl' as const },
+        { name: 'Push-ups', cue: 'Chest leads.', form: '', animationId: 'push-ups' as const },
       ] },
     }));
     const { container } = render(<Workout />);

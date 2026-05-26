@@ -40,8 +40,8 @@ export function WorkoutTimer() {
   const labelFn = PHASE_LABEL[seg.kind];
   const phaseLabel = typeof labelFn === 'function' ? labelFn(w) : labelFn;
   const nextName = w.segments[w.segIdx + 1]?.label;
-  const SegAnim = seg.movementPattern && showExerciseGuide
-    ? getAnimationComponent(seg.movementPattern)
+  const SegAnim = seg.animationId && showExerciseGuide
+    ? getAnimationComponent(seg.animationId)
     : null;
 
   return (
