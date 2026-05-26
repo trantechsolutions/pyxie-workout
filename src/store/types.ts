@@ -42,10 +42,25 @@ export interface Settings {
   showExerciseGuide: boolean;
 }
 
+export type MovementPattern =
+  | 'push'
+  | 'squat'
+  | 'lunge'
+  | 'hinge'
+  | 'plank_hold'
+  | 'plank_dynamic'
+  | 'core_dynamic'
+  | 'jump'
+  | 'twist'
+  | 'stretch_mobility'
+  | 'hold'
+  | 'burpee';
+
 export interface Exercise {
   name: string;
   cue: string;
-  form?: string;
+  form: string;
+  movementPattern: MovementPattern;
 }
 
 export interface Segment {
@@ -54,6 +69,7 @@ export interface Segment {
   label: string;
   cue?: string;
   form?: string;
+  movementPattern?: MovementPattern;
   idx?: number;
   next?: string;
 }

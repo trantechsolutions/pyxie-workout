@@ -53,8 +53,8 @@ export function makeActiveWorkout(over: Partial<ActiveWorkout> = {}): ActiveWork
     workCompleted: 2,
     workTotal: 2,
     exList: [
-      { name: 'Push-ups', cue: 'Chest leads.' },
-      { name: 'Squats',   cue: 'Sit back.' },
+      { name: 'Push-ups', cue: 'Chest leads.', form: 'test form', movementPattern: 'push' as const },
+      { name: 'Squats', cue: 'Sit back.', form: 'test form', movementPattern: 'push' as const },
     ],
     intensity: 'medium',
     complexity: 'beginner',
