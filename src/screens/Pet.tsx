@@ -6,13 +6,18 @@ import { EggSprite } from '../components/EggSprite';
 import { petMood } from '../lib/decay';
 import { streakMultiplier } from '../lib/progression';
 import { Hatch } from './Hatch';
+import { PetLoading } from './PetLoading';
 
 export function Pet() {
   const pet = usePyxie((s) => s.pet);
+  const petHydrating = usePyxie((s) => s.petHydrating);
   const tapPet = usePyxie((s) => s.tapPet);
   const play = usePyxie((s) => s.play);
   const setTab = usePyxie((s) => s.setTab);
 
+  // ADR-009 M2: loading state takes priority over the Hatch fallback so users
+  // with a server-side pet don't see a flash of the egg-nest screen.
+  if (petHydrating) return <PetLoading />;
   if (!pet) return <Hatch />;
 
   if (pet.workoutsToHatch > 0) {

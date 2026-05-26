@@ -22,6 +22,7 @@ import { useDailyAlarm } from './hooks/useDailyAlarm';
 import { useSyncFlusher } from './hooks/useSyncFlusher';
 import { useSyncPetSnapshot } from './hooks/useSyncPetSnapshot';
 import { useFamilyMembershipProbe } from './hooks/useFamilyMembershipProbe';
+import { usePetHydration } from './hooks/usePetHydration';
 
 function ScreenRouter() {
   const pet = usePyxie((s) => s.pet);
@@ -63,6 +64,7 @@ export function App() {
   useSyncFlusher();
   useSyncPetSnapshot();
   useFamilyMembershipProbe();
+  usePetHydration();
   const iosNudge = useIosInstallNudge();
 
   return (

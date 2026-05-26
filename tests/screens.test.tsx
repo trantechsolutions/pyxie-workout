@@ -71,6 +71,30 @@ describe('Pet screen', () => {
   });
 });
 
+describe('Pet screen — hydration gate (ADR-009 M2)', () => {
+  beforeEach(resetStore);
+
+  it('renders <PetLoading /> when petHydrating === true (takes priority over Hatch)', () => {
+    usePyxie.setState({ pet: null, petHydrating: true });
+    const { container } = render(<Pet />);
+    expect(container.querySelector('.pet-loading')).not.toBeNull();
+    // Hatch panel title must NOT be present.
+    expect(screen.queryByText('A mysterious egg appears')).toBeNull();
+  });
+
+  it('renders <Hatch /> when petHydrating === false AND pet === null', () => {
+    usePyxie.setState({ pet: null, petHydrating: false });
+    render(<Pet />);
+    expect(screen.getByText('A mysterious egg appears')).toBeInTheDocument();
+  });
+
+  it('renders the pet when petHydrating === false AND pet !== null', () => {
+    usePyxie.setState({ pet: makePet({ xp: 30 }), petHydrating: false });
+    render(<Pet />);
+    expect(screen.getByText('Testy')).toBeInTheDocument();
+  });
+});
+
 describe('Workout screen', () => {
   beforeEach(() => { resetStore(); usePyxie.setState({ pet: makePet() }); });
 
