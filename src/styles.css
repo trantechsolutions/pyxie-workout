@@ -493,6 +493,15 @@
     animation: egg-pulse 2.4s ease-in-out infinite;
     transform-origin: 50% 70%;
   }
+  /* ADR-009 M2: server-pet hydration loading screen. Reuses .egg-pulse via
+     .egg-sprite so this stays a 4-line addition. */
+  .pet-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
   @keyframes egg-pulse {
     0%, 100% { transform: scale(1, 1); }
     45%      { transform: scale(1.05, 0.95); }

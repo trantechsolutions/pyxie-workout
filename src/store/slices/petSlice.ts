@@ -12,6 +12,10 @@ function randomEggColor(): Line {
 export interface PetSlice {
   pet: Pet | null;
   evolved: { pet: Pet; from: number } | null;
+  // ADR-009 M2: true while the server-pet fetch is in flight. Defaults to
+  // `true` so the router gate can render <PetLoading /> instead of flashing
+  // <Hatch /> for users who actually have a pet on the server.
+  petHydrating: boolean;
 
   decayTick: () => void;
   setStarterPick: (line: Line | null) => void;
@@ -23,11 +27,15 @@ export interface PetSlice {
   play: () => void;
   resetPet: () => void;
   acknowledgeEvolution: () => void;
+  // ADR-009 M2: replace the entire pet (server is authoritative).
+  replacePet: (pet: Pet | null) => void;
+  setPetHydrating: (b: boolean) => void;
 }
 
 export const createPetSlice: PyxieSlice<PetSlice> = (set, get) => ({
   pet: null,
   evolved: null,
+  petHydrating: true,
 
   decayTick: () => {
     const { pet } = get();
@@ -88,4 +96,7 @@ export const createPetSlice: PyxieSlice<PetSlice> = (set, get) => ({
   })),
 
   acknowledgeEvolution: () => set({ evolved: null }),
+
+  replacePet: (pet) => set({ pet }),
+  setPetHydrating: (b) => set({ petHydrating: b }),
 });

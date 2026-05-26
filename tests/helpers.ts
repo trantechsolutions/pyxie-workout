@@ -13,6 +13,7 @@ export function resetStore() {
     ui: { ...DEFAULT_UI },
     deferredPrompt: null,
     evolved: null,
+    petHydrating: false,
   });
   localStorage.clear();
 }
