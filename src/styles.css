@@ -671,6 +671,84 @@
     max-width: 320px;
     font-style: italic;
   }
+  /* === EXERCISE GUIDE / ANIMATIONS === */
+  .preview-guide {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .preview-guide .exercise-anim {
+    flex: 0 0 auto;
+    background: rgba(125,249,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px;
+  }
+  .preview-guide .preview-form {
+    flex: 1 1 auto;
+    margin-top: 0;
+  }
+  @media (max-width: 420px) {
+    .preview-guide { flex-direction: column; align-items: center; }
+    .preview-guide .preview-form { width: 100%; }
+  }
+  .timer-anim-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 2px 0 4px;
+  }
+  .exercise-anim {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  .exercise-anim .anim-frame,
+  .exercise-anim .anim-burpee-frame { opacity: 0; }
+  .exercise-anim .anim-frame-a {
+    animation: anim-2step 1.6s steps(1, end) infinite;
+  }
+  .exercise-anim .anim-frame-b {
+    animation: anim-2step 1.6s steps(1, end) infinite;
+    animation-delay: 0.8s;
+  }
+  .exercise-anim .anim-burpee-1 { animation: anim-4step 3.2s steps(1, end) infinite; }
+  .exercise-anim .anim-burpee-2 { animation: anim-4step 3.2s steps(1, end) infinite; animation-delay: 0.8s; }
+  .exercise-anim .anim-burpee-3 { animation: anim-4step 3.2s steps(1, end) infinite; animation-delay: 1.6s; }
+  .exercise-anim .anim-burpee-4 { animation: anim-4step 3.2s steps(1, end) infinite; animation-delay: 2.4s; }
+  .exercise-anim .anim-pulse {
+    animation: anim-pulse 2.4s ease-in-out infinite;
+    transform-origin: center;
+  }
+  .exercise-anim .anim-rotate {
+    animation: anim-rotate 3s linear infinite;
+  }
+  @keyframes anim-2step {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  @keyframes anim-4step {
+    0%, 24% { opacity: 1; }
+    25%, 100% { opacity: 0; }
+  }
+  @keyframes anim-pulse {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1px); }
+  }
+  @keyframes anim-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .exercise-anim .anim-frame-a,
+    .exercise-anim .anim-burpee-1 { opacity: 1; animation: none; }
+    .exercise-anim .anim-frame-b,
+    .exercise-anim .anim-burpee-2,
+    .exercise-anim .anim-burpee-3,
+    .exercise-anim .anim-burpee-4 { opacity: 0; animation: none; }
+    .exercise-anim .anim-pulse,
+    .exercise-anim .anim-rotate { animation: none; transform: none; }
+  }
   /* === WIKI === */
   .wiki-content {
     font-family: 'JetBrains Mono', monospace;

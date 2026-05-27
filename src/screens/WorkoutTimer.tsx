@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { usePyxie } from '../store/usePyxie';
 import type { ActiveWorkout } from '../store/types';
+import { getAnimationComponent } from '../components/animations';
 
 const PHASE_LABEL: Record<string, string | ((w: ActiveWorkout) => string)> = {
   warmup: 'Warm Up',
@@ -39,12 +40,18 @@ export function WorkoutTimer() {
   const labelFn = PHASE_LABEL[seg.kind];
   const phaseLabel = typeof labelFn === 'function' ? labelFn(w) : labelFn;
   const nextName = w.segments[w.segIdx + 1]?.label;
+  const SegAnim = seg.animationId && showExerciseGuide
+    ? getAnimationComponent(seg.animationId)
+    : null;
 
   return (
     <div className="timer-wrap">
       <div className="timer-phase">{phaseLabel}</div>
       <div className="timer-exercise">{seg.label}</div>
       {seg.cue && <div className="timer-detail">{seg.cue}</div>}
+      {SegAnim && (
+        <div className="timer-anim-wrap"><SegAnim size="sm" /></div>
+      )}
       {seg.form && showExerciseGuide && <div className="timer-form">{seg.form}</div>}
       {seg.kind === 'rest' && seg.next && <div className="timer-detail">Next: <b>{seg.next}</b></div>}
       <div className={`timer-circle ${phaseClass}`}>

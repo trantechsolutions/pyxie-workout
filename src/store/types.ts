@@ -45,7 +45,10 @@ export interface Settings {
 export interface Exercise {
   name: string;
   cue: string;
-  form?: string;
+  form: string;
+  // Per-exercise animation id (kebab-case derived from name). Resolves 1:1 to a
+  // component in src/components/animations via getAnimationComponent.
+  animationId: string;
 }
 
 export interface Segment {
@@ -54,6 +57,7 @@ export interface Segment {
   label: string;
   cue?: string;
   form?: string;
+  animationId?: string;
   idx?: number;
   next?: string;
 }

@@ -118,7 +118,7 @@ describe('Workout screen', () => {
   it('shows form text as an expandable row when showExerciseGuide is on', () => {
     usePyxie.setState((s) => ({
       settings: { ...s.settings, showExerciseGuide: true },
-      ui: { ...s.ui, previewList: [{ name: 'Bear Crawl', cue: 'Hips low.', form: 'Crawl forward on hands and feet, hips low, knees hovering.' }] },
+      ui: { ...s.ui, previewList: [{ name: 'Bear Crawl', cue: 'Hips low.', form: 'Crawl forward on hands and feet, hips low, knees hovering.', animationId: 'bear-crawl' as const }] },
     }));
     const { container } = render(<Workout />);
     expect(container.querySelector('details.preview-item')).not.toBeNull();
@@ -128,24 +128,23 @@ describe('Workout screen', () => {
   it('hides form text when showExerciseGuide is off', () => {
     usePyxie.setState((s) => ({
       settings: { ...s.settings, showExerciseGuide: false },
-      ui: { ...s.ui, previewList: [{ name: 'Bear Crawl', cue: 'Hips low.', form: 'Crawl forward on hands and feet, hips low, knees hovering.' }] },
+      ui: { ...s.ui, previewList: [{ name: 'Bear Crawl', cue: 'Hips low.', form: 'Crawl forward on hands and feet, hips low, knees hovering.', animationId: 'bear-crawl' as const }] },
     }));
     const { container } = render(<Workout />);
     expect(container.querySelector('details.preview-item')).toBeNull();
     expect(screen.queryByText(/Crawl forward on hands and feet/)).toBeNull();
   });
 
-  it('when exercise.form is undefined, no <details> rows are emitted (flat preview)', () => {
+  it('renders a flat row (no <details>) when form is empty', () => {
     usePyxie.setState((s) => ({
       settings: { ...s.settings, showExerciseGuide: true },
       ui: { ...s.ui, previewList: [
-        { name: 'Bear Crawl', cue: 'Hips low.' },
-        { name: 'Push-ups', cue: 'Chest leads.' },
+        { name: 'Bear Crawl', cue: 'Hips low.', form: '', animationId: 'bear-crawl' as const },
+        { name: 'Push-ups', cue: 'Chest leads.', form: '', animationId: 'push-ups' as const },
       ] },
     }));
     const { container } = render(<Workout />);
     expect(container.querySelector('details.preview-item')).toBeNull();
-    // Names still render — just as flat rows (existing layout, no breakage).
     expect(screen.getByText(/Bear Crawl/)).toBeInTheDocument();
     expect(screen.getByText(/Push-ups/)).toBeInTheDocument();
   });

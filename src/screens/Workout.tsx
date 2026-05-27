@@ -3,6 +3,7 @@ import { usePyxie } from '../store/usePyxie';
 import type { Intensity, Complexity } from '../store/types';
 import { ensureAudioCtx } from '../lib/audio';
 import { SegmentedControl } from '../components/SegmentedControl';
+import { getAnimationComponent } from '../components/animations';
 
 const INTENSITIES: readonly Intensity[] = ['easy', 'medium', 'hard'];
 const COMPLEXITIES: readonly Complexity[] = ['beginner', 'intermediate', 'advanced'];
@@ -39,18 +40,25 @@ export function Workout() {
       {previewList && (
         <div>
           <div className="field-label preview-label">Today's set</div>
-          {previewList.map((e, i) =>
-            e.form && settings.showExerciseGuide ? (
-              <details key={i} className="preview-item">
-                <summary><span>{i + 1}. {e.name}</span><span>45s</span></summary>
-                <div className="preview-form">{e.form}</div>
-              </details>
-            ) : (
+          {previewList.map((e, i) => {
+            if (e.form && settings.showExerciseGuide) {
+              const Anim = getAnimationComponent(e.animationId);
+              return (
+                <details key={i} className="preview-item">
+                  <summary><span>{i + 1}. {e.name}</span><span>45s</span></summary>
+                  <div className="preview-guide">
+                    <Anim size="md" />
+                    <div className="preview-form">{e.form}</div>
+                  </div>
+                </details>
+              );
+            }
+            return (
               <div key={i} className="history-item">
                 <span>{i + 1}. {e.name}</span><span>45s</span>
               </div>
-            )
-          )}
+            );
+          })}
         </div>
       )}
       <div className="cta-grid">

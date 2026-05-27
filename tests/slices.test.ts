@@ -154,14 +154,14 @@ describe('workoutSlice — preview + intensity/complexity', () => {
   beforeEach(resetStore);
 
   it('setIntensity stores choice and resets previewList', () => {
-    usePyxie.setState((s) => ({ ui: { ...s.ui, previewList: [{ name: 'x', cue: 'y' }] } }));
+    usePyxie.setState((s) => ({ ui: { ...s.ui, previewList: [{ name: 'x', cue: 'y', form: 'test form', animationId: 'push-ups' as const }] } }));
     usePyxie.getState().setIntensity('hard');
     expect(usePyxie.getState().settings.intensity).toBe('hard');
     expect(usePyxie.getState().ui.previewList).toBeNull();
   });
 
   it('setComplexity stores choice and resets previewList', () => {
-    usePyxie.setState((s) => ({ ui: { ...s.ui, previewList: [{ name: 'x', cue: 'y' }] } }));
+    usePyxie.setState((s) => ({ ui: { ...s.ui, previewList: [{ name: 'x', cue: 'y', form: 'test form', animationId: 'push-ups' as const }] } }));
     usePyxie.getState().setComplexity('advanced');
     expect(usePyxie.getState().settings.complexity).toBe('advanced');
     expect(usePyxie.getState().ui.previewList).toBeNull();
@@ -173,14 +173,14 @@ describe('workoutSlice — preview + intensity/complexity', () => {
   });
 
   it('buildPreview is a no-op when previewList already exists', () => {
-    const list = [{ name: 'x', cue: 'y' }];
+    const list = [{ name: 'x', cue: 'y', form: 'test form', animationId: 'push-ups' as const }];
     usePyxie.setState((s) => ({ ui: { ...s.ui, previewList: list } }));
     usePyxie.getState().buildPreview();
     expect(usePyxie.getState().ui.previewList).toBe(list);
   });
 
   it('rerollPreview always rewrites the list', () => {
-    const stale = [{ name: 'x', cue: 'y' }];
+    const stale = [{ name: 'x', cue: 'y', form: 'test form', animationId: 'push-ups' as const }];
     usePyxie.setState((s) => ({ ui: { ...s.ui, previewList: stale } }));
     usePyxie.getState().rerollPreview();
     expect(usePyxie.getState().ui.previewList).toHaveLength(8);
@@ -193,8 +193,8 @@ describe('workoutSlice — start/skip/finish', () => {
 
   it('startWorkout builds segments from the preview when present', () => {
     const preview = [
-      { name: 'Push-ups', cue: 'a' },
-      { name: 'Squats',   cue: 'b' },
+      { name: 'Push-ups', cue: 'a', form: 'test form', animationId: 'push-ups' as const },
+      { name: 'Squats', cue: 'b', form: 'test form', animationId: 'push-ups' as const },
     ];
     usePyxie.setState((s) => ({ ui: { ...s.ui, previewList: preview } }));
     usePyxie.getState().startWorkout();
@@ -248,7 +248,7 @@ describe('workoutSlice — start/skip/finish', () => {
     const pet = makePet({ xp: 10 });
     usePyxie.setState({
       pet,
-      ui: { ...usePyxie.getState().ui, workoutActive: makeActiveWorkout(), previewList: [{ name: 'x', cue: 'y' }] },
+      ui: { ...usePyxie.getState().ui, workoutActive: makeActiveWorkout(), previewList: [{ name: 'x', cue: 'y', form: 'test form', animationId: 'push-ups' as const }] },
     });
     usePyxie.getState().finishWorkout(false);
     const s = usePyxie.getState();
@@ -409,7 +409,7 @@ describe('uiSlice', () => {
   beforeEach(resetStore);
 
   it('setTab updates tab and clears previewList', () => {
-    usePyxie.setState((s) => ({ ui: { ...s.ui, previewList: [{ name: 'a', cue: 'b' }] } }));
+    usePyxie.setState((s) => ({ ui: { ...s.ui, previewList: [{ name: 'a', cue: 'b', form: 'test form', animationId: 'push-ups' as const }] } }));
     usePyxie.getState().setTab('settings');
     expect(usePyxie.getState().ui.tab).toBe('settings');
     expect(usePyxie.getState().ui.previewList).toBeNull();
